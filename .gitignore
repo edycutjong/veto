@@ -3,10 +3,22 @@ target/
 .next/
 __pycache__/
 *.pyc
-.env
-.env.local
 out/
 .DS_Store
 broadcast/
 cache/
 
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Generated assets
+assets/
+
+# Foundry artifacts
+contracts/solidity/out/
+contracts/solidity/cache/
+
+# Rust build
+contracts/stylus/target/

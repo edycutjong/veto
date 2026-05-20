@@ -1,0 +1,213 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Primary cyan gradient -->
+    <linearGradient id="cyan-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22D3EE"/>
+      <stop offset="50%" stop-color="#06B6D4"/>
+      <stop offset="100%" stop-color="#0891B2"/>
+    </linearGradient>
+
+    <!-- Hot accent gradient -->
+    <linearGradient id="accent-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F87171"/>
+      <stop offset="100%" stop-color="#EF4444"/>
+    </linearGradient>
+
+    <!-- Shield gradient -->
+    <linearGradient id="shield-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06B6D4"/>
+      <stop offset="40%" stop-color="#0E7490"/>
+      <stop offset="100%" stop-color="#EF4444"/>
+    </linearGradient>
+
+    <!-- Inner background gradient -->
+    <linearGradient id="inner-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0C1527"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+
+    <!-- Outer glow -->
+    <filter id="outer-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="20" result="blur"/>
+      <feFlood flood-color="#06B6D4" flood-opacity="0.5"/>
+      <feComposite in2="blur" operator="in" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Hand glow -->
+    <filter id="hand-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Red pulse glow for block indicator -->
+    <filter id="red-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="blur"/>
+      <feFlood flood-color="#EF4444" flood-opacity="0.6"/>
+      <feComposite in2="blur" operator="in" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Animated pulse -->
+    <style>
+      @keyframes pulse {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 0.8; }
+      }
+      @keyframes scan {
+        0% { transform: translateY(-180px); }
+        100% { transform: translateY(180px); }
+      }
+      .pulse-ring { animation: pulse 2s ease-in-out infinite; }
+      .scan-line { animation: scan 3s linear infinite; }
+    </style>
+  </defs>
+
+  <!-- Background circle (optional for app icon contexts) -->
+  <rect width="512" height="512" rx="96" fill="#020617"/>
+
+  <!-- Ambient glow -->
+  <circle cx="256" cy="240" r="200" fill="url(#cyan-grad)" opacity="0.06"/>
+  <circle cx="280" cy="300" r="150" fill="#EF4444" opacity="0.04"/>
+
+  <!-- Shield body with glow -->
+  <g filter="url(#outer-glow)">
+    <path
+      d="M256 52
+         L440 138
+         C440 138 456 332 256 470
+         C56 332 72 138 72 138
+         Z"
+      fill="url(#shield-grad)"
+      opacity="0.95"
+    />
+  </g>
+
+  <!-- Inner shield (dark inset) -->
+  <path
+    d="M256 82
+       L410 155
+       C410 155 424 318 256 436
+       C88 318 102 155 102 155
+       Z"
+    fill="url(#inner-grad)"
+    opacity="0.92"
+  />
+
+  <!-- Scan line effect -->
+  <g clip-path="url(#shield-clip)">
+    <defs>
+      <clipPath id="shield-clip">
+        <path d="M256 82 L410 155 C410 155 424 318 256 436 C88 318 102 155 102 155 Z"/>
+      </clipPath>
+    </defs>
+    <rect class="scan-line" x="102" y="256" width="316" height="2" fill="url(#cyan-grad)" opacity="0.15"/>
+  </g>
+
+  <!-- ✋ STOP HAND — Bold and centered -->
+  <g transform="translate(256, 240)" filter="url(#hand-glow)">
+    <!-- Palm -->
+    <path
+      d="M-8 70 C-30 65, -45 30, -42 -10
+         L-42 -60
+         C-42 -68, -34 -74, -26 -74
+         C-18 -74, -10 -68, -10 -60
+         L-10 -30
+         L-10 -90
+         C-10 -98, -2 -104, 6 -104
+         C14 -104, 22 -98, 22 -90
+         L22 -40
+         L22 -95
+         C22 -103, 30 -109, 38 -109
+         C46 -109, 54 -103, 54 -95
+         L54 -30
+         L54 -75
+         C54 -83, 62 -89, 70 -89
+         C78 -89, 86 -83, 86 -75
+         L86 20
+         C86 70, 60 100, 20 110
+         C-10 115, -40 100, -42 70
+         Z"
+      fill="url(#cyan-grad)"
+      opacity="0.95"
+    />
+    <!-- Palm highlight -->
+    <path
+      d="M-8 70 C-30 65, -45 30, -42 -10
+         L-42 -60
+         C-42 -68, -34 -74, -26 -74
+         C-18 -74, -10 -68, -10 -60
+         L-10 -30"
+      fill="none"
+      stroke="#22D3EE"
+      stroke-width="1.5"
+      opacity="0.4"
+    />
+  </g>
+
+  <!-- Variance wave (behind hand, subtle) -->
+  <g transform="translate(256, 360)" opacity="0.5">
+    <path
+      d="M-80 0
+         C-60 -20, -45 -20, -30 0
+         C-15 20, 0 20, 15 0
+         C30 -20, 45 -20, 60 0"
+      stroke="url(#accent-grad)"
+      stroke-width="3"
+      stroke-linecap="round"
+      fill="none"
+    />
+    <!-- Threshold line -->
+    <line x1="-80" y1="-12" x2="60" y2="-12"
+      stroke="#EF4444"
+      stroke-width="1.5"
+      stroke-dasharray="6 3"
+      opacity="0.6"
+    />
+  </g>
+
+  <!-- Block indicator dot -->
+  <g filter="url(#red-glow)">
+    <circle cx="328" cy="360" r="6" fill="#EF4444" opacity="0.9"/>
+    <circle cx="328" cy="360" r="3" fill="#FECACA"/>
+  </g>
+
+  <!-- Pulse ring around shield -->
+  <path
+    class="pulse-ring"
+    d="M256 52
+       L440 138
+       C440 138 456 332 256 470
+       C56 332 72 138 72 138
+       Z"
+    fill="none"
+    stroke="url(#cyan-grad)"
+    stroke-width="1.5"
+    opacity="0.3"
+  />
+
+  <!-- Corner HUD marks -->
+  <g opacity="0.35" stroke="#06B6D4" stroke-width="2" fill="none">
+    <polyline points="56,56 28,56 28,28"/>
+    <polyline points="456,56 484,56 484,28"/>
+    <polyline points="56,456 28,456 28,484"/>
+    <polyline points="456,456 484,456 484,484"/>
+  </g>
+
+  <!-- Small "VETO" text at bottom -->
+  <text x="256" y="490" text-anchor="middle"
+    font-family="'Orbitron', system-ui, sans-serif"
+    font-size="18" font-weight="800"
+    letter-spacing="8" fill="#06B6D4" opacity="0.5">
+    VETO
+  </text>
+</svg>
