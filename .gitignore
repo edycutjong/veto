@@ -1,0 +1,12 @@
+node_modules/
+target/
+.next/
+__pycache__/
+*.pyc
+.env
+.env.local
+out/
+.DS_Store
+broadcast/
+cache/
+
