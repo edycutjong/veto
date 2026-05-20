@@ -1,0 +1,231 @@
+@import "tailwindcss";
+
+/* ── AegisVault Cyberpunk Design System ── */
+
+:root {
+  /* Cyan accent (safe/primary) */
+  --aegis-cyan: #06b6d4;
+  --aegis-cyan-glow: rgba(6, 182, 212, 0.3);
+  --aegis-cyan-dim: #0891b2;
+
+  /* Red accent (blocked/danger) */
+  --aegis-red: #ef4444;
+  --aegis-red-glow: rgba(239, 68, 68, 0.3);
+  --aegis-red-dim: #dc2626;
+
+  /* Green accent (approved/success) */
+  --aegis-green: #22c55e;
+  --aegis-green-glow: rgba(34, 197, 94, 0.3);
+
+  /* Amber accent (warning/pending) */
+  --aegis-amber: #f59e0b;
+
+  /* Slate backgrounds */
+  --aegis-bg: #020617;
+  --aegis-bg-card: #0f172a;
+  --aegis-bg-card-hover: #1e293b;
+  --aegis-border: #1e293b;
+  --aegis-border-glow: #334155;
+
+  /* Font stacks */
+  --font-display: "Orbitron", var(--font-mono), monospace;
+}
+
+/* ── Global Styles ── */
+
+body {
+  background: var(--aegis-bg);
+  background-image: radial-gradient(
+      ellipse at 50% 0%,
+      rgba(6, 182, 212, 0.05) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse at 80% 80%,
+      rgba(239, 68, 68, 0.03) 0%,
+      transparent 50%
+    );
+}
+
+/* ── Glassmorphism Card ── */
+
+.glass-card {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--aegis-border);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  border-color: var(--aegis-border-glow);
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.05);
+}
+
+/* ── Glow effects ── */
+
+.glow-cyan {
+  box-shadow: 0 0 15px var(--aegis-cyan-glow), 0 0 30px rgba(6, 182, 212, 0.1);
+}
+
+.glow-red {
+  box-shadow: 0 0 15px var(--aegis-red-glow), 0 0 30px rgba(239, 68, 68, 0.1);
+}
+
+.glow-green {
+  box-shadow: 0 0 15px var(--aegis-green-glow),
+    0 0 30px rgba(34, 197, 94, 0.1);
+}
+
+/* ── Animated border gradient ── */
+
+.border-gradient {
+  position: relative;
+}
+
+.border-gradient::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 13px;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    var(--aegis-cyan) 0%,
+    transparent 50%,
+    var(--aegis-red) 100%
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
+}
+
+.border-gradient:hover::before {
+  opacity: 0.8;
+}
+
+/* ── Scan line animation ── */
+
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+.scanline::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--aegis-cyan),
+    transparent
+  );
+  opacity: 0.08;
+  animation: scanline 8s linear infinite;
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* ── Pulse animation ── */
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* ── Text glow ── */
+
+.text-glow-cyan {
+  text-shadow: 0 0 10px var(--aegis-cyan-glow);
+}
+
+.text-glow-red {
+  text-shadow: 0 0 10px var(--aegis-red-glow);
+}
+
+/* ── Status indicator ── */
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot-live {
+  background: var(--aegis-green);
+  box-shadow: 0 0 6px var(--aegis-green-glow);
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+.status-dot-blocked {
+  background: var(--aegis-red);
+  box-shadow: 0 0 6px var(--aegis-red-glow);
+}
+
+/* ── Monospace data ── */
+
+.data-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* ── Screen shake animation (for blocked trades) ── */
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-4px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* ── Flash red (for blocked trades) ── */
+
+@keyframes flash-red {
+  0% {
+    background-color: rgba(239, 68, 68, 0.2);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.flash-red {
+  animation: flash-red 0.8s ease-out;
+}
