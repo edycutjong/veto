@@ -1,0 +1,821 @@
+<!--
+  VETO — Hackathon Pitch Deck
+  ════════════════════════════════════════════════
+  Navigation:  ← → arrows, Spacebar advances
+  Presenter:   P toggles speaker notes
+  Contrast:    C toggles contrast debug borders
+  Print PDF:   Cmd+P → Save as PDF → Landscape
+  ════════════════════════════════════════════════
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, initial-scale=1">
+<title>Veto — Pitch Deck</title>
+
+<!-- Google Fonts (enhancement only — system fallback is fine) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════ CSS VARIABLES — rebrand in 30 seconds ═══════ */
+:root {
+  --color-bg: #020617;
+  --color-bg-elevated: #0C1527;
+  --color-primary: #06B6D4;
+  --color-accent: #EF4444;
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-text-hi: #F8FAFC;
+  --color-text-mid: #CBD5E1;
+  --color-text-low: #94A3B8;
+  --color-border: rgba(255,255,255,0.12);
+  --font-display: "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+/* ═══════ RESET & BASE ═══════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--color-bg); color: var(--color-text-hi); font-family: var(--font-display); -webkit-font-smoothing: antialiased; overflow: hidden; width: 100vw; height: 100vh; }
+
+/* ═══════ STAGE SCALING (fixed 1920×1080, scaled to viewport) ═══════ */
+#stage {
+  width: 1920px; height: 1080px;
+  position: absolute; top: 50%; left: 50%;
+  transform-origin: center center;
+}
+.slide {
+  width: 1920px; height: 1080px;
+  position: absolute; top: 0; left: 0;
+  display: none; flex-direction: column;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+.slide.active { display: flex; }
+
+
+
+
+/* ═══════ SPEAKER NOTES ═══════ */
+.speaker-notes { display: none; }
+body.presenter #notes-panel {
+  display: block; position: fixed; bottom: 0; left: 0; right: 0;
+  height: 20vh; background: rgba(0,0,0,0.95); border-top: 1px solid var(--color-border);
+  padding: 20px 40px; font-family: var(--font-display); font-size: 18px;
+  color: var(--color-text-mid); line-height: 1.6; z-index: 200; overflow-y: auto;
+}
+body.presenter #stage { height: 80vh; }
+#notes-panel { display: none; }
+
+/* Press C to toggle contrast debug mode */
+body.debug-contrast .contrast-check { outline: 2px solid magenta !important; }
+
+/* ═══════ BACKGROUND TEXTURES ═══════ */
+.slide-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(6,182,212,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(239,68,68,0.04) 0%, transparent 50%);
+}
+.grid-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 80px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 80px);
+}
+
+/* ═══════ UTILITY CLASSES ═══════ */
+.slide-content { position: relative; z-index: 1; width: 100%; height: 100%; padding: 80px 100px; display: flex; flex-direction: column; }
+.mono { font-family: var(--font-mono); }
+.text-primary { color: var(--color-primary); }
+.text-accent { color: var(--color-accent); }
+.text-success { color: var(--color-success); }
+.text-low { color: var(--color-text-low); }
+.text-mid { color: var(--color-text-mid); }
+.text-gradient { background: linear-gradient(135deg, var(--color-primary), var(--color-accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.headline { font-size: 72px; font-weight: 800; letter-spacing: -2px; line-height: 1.1; }
+.subhead { font-size: 36px; font-weight: 600; letter-spacing: -0.5px; line-height: 1.3; }
+.body-text { font-size: 22px; line-height: 1.6; color: var(--color-text-mid); max-width: 800px; }
+.label { font-family: var(--font-mono); font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: var(--color-primary); opacity: 0.7; margin-bottom: 16px; }
+.glass {
+  backdrop-filter: blur(20px) saturate(1.4);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+}
+.hud-corners { position: relative; }
+.hud-corners::before, .hud-corners::after { content: ''; position: absolute; width: 16px; height: 16px; pointer-events: none; }
+.hud-corners::before { top: -1px; left: -1px; border-top: 2px solid var(--color-primary); border-left: 2px solid var(--color-primary); border-top-left-radius: 16px; opacity: 0.5; }
+.hud-corners::after { bottom: -1px; right: -1px; border-bottom: 2px solid var(--color-primary); border-right: 2px solid var(--color-primary); border-bottom-right-radius: 16px; opacity: 0.5; }
+
+/* ═══════ PRINT TO PDF ═══════ */
+@page { size: 16in 9in landscape; margin: 0; }
+@media print {
+  html, body, .slide { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { overflow: visible; width: auto; height: auto; }
+  #stage { position: static; transform: none !important; width: 100%; height: auto; }
+  .slide { display: flex !important; position: relative; page-break-inside: avoid; break-inside: avoid; page-break-after: always; break-after: page; width: 100%; height: 100vh; }
+  #counter, #notes-panel, .nav-hint { display: none !important; }
+}
+
+/* ═══════ SLIDE 1: COVER ═══════ */
+.cover-layout { display: flex; align-items: center; justify-content: space-between; flex: 1; }
+.cover-left { max-width: 800px; }
+.cover-name { font-size: 120px; font-weight: 900; letter-spacing: -4px; line-height: 1; margin-bottom: 24px; }
+.cover-tagline { font-size: 28px; color: var(--color-text-mid); line-height: 1.5; margin-bottom: 40px; }
+.cover-badge { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 13px; color: var(--color-text-low); background: rgba(255,255,255,0.04); border: 1px solid var(--color-border); padding: 8px 16px; border-radius: 999px; }
+.cover-right { position: relative; width: 600px; height: 600px; display: flex; align-items: center; justify-content: center; }
+.cover-shield { width: 400px; height: 400px; opacity: 0.15; }
+@keyframes pulse-glow { 0%,100% { filter: drop-shadow(0 0 30px rgba(6,182,212,0.2)); } 50% { filter: drop-shadow(0 0 60px rgba(6,182,212,0.4)); } }
+.cover-shield { animation: pulse-glow 4s ease-in-out infinite; }
+.cover-stat { position: absolute; bottom: 100px; right: 0; font-family: var(--font-mono); font-size: 14px; color: var(--color-primary); opacity: 0.6; text-align: right; }
+
+/* ═══════ SLIDE 2: HOOK ═══════ */
+.hook-center { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; text-align: center; }
+.hook-number { font-size: 180px; font-weight: 900; letter-spacing: -8px; line-height: 1; }
+.hook-context { font-size: 32px; color: var(--color-text-mid); margin-top: 20px; max-width: 700px; }
+
+/* ═══════ SLIDE 3: PROBLEM ═══════ */
+.problem-layout { display: flex; gap: 80px; align-items: center; flex: 1; }
+.problem-left { flex: 1; }
+.problem-right { flex: 1; display: flex; flex-direction: column; gap: 24px; }
+.problem-card { padding: 28px 32px; border-left: 3px solid var(--color-accent); background: rgba(239,68,68,0.04); border-radius: 0 12px 12px 0; }
+.problem-card-title { font-family: var(--font-mono); font-size: 14px; color: var(--color-accent); letter-spacing: 1px; margin-bottom: 8px; }
+.problem-card-text { font-size: 18px; color: var(--color-text-mid); line-height: 1.5; }
+
+/* ═══════ SLIDE 4: SOLUTION ═══════ */
+.solution-layout { display: flex; gap: 80px; align-items: center; flex: 1; }
+.solution-left { flex: 1; }
+.solution-right { flex: 1.2; }
+.browser-frame {
+  background: var(--color-bg-elevated); border: 1px solid var(--color-border);
+  border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.browser-bar { height: 36px; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--color-border); display: flex; align-items: center; padding: 0 14px; gap: 8px; }
+.browser-dot { width: 10px; height: 10px; border-radius: 50%; }
+.browser-dot.r { background: #EF4444; } .browser-dot.y { background: #F59E0B; } .browser-dot.g { background: #22C55E; }
+.browser-url { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-low); margin-left: 12px; background: rgba(255,255,255,0.04); padding: 4px 12px; border-radius: 4px; }
+.browser-body { position: relative; }
+.browser-body img { width: 100%; display: block; }
+
+/* ═══════ SLIDE 5: ARCHITECTURE ═══════ */
+.arch-layout { display: flex; align-items: center; justify-content: center; flex: 1; }
+.arch-img { width: 100%; max-width: 1600px; border-radius: 16px; border: 1px solid var(--color-border); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+
+/* ═══════ SLIDE 6: DEMO ═══════ */
+.demo-layout { display: flex; gap: 60px; align-items: center; flex: 1; }
+.demo-screens { flex: 1.5; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.demo-card { position: relative; }
+.demo-card img { width: 100%; border-radius: 12px; border: 1px solid var(--color-border); }
+.demo-callout { position: absolute; top: -10px; left: -10px; width: 32px; height: 32px; background: var(--color-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--color-bg); box-shadow: 0 0 20px rgba(6,182,212,0.4); }
+.demo-list { flex: 0.8; display: flex; flex-direction: column; gap: 28px; }
+.demo-item { display: flex; gap: 16px; align-items: flex-start; }
+.demo-num { width: 32px; height: 32px; background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 14px; color: var(--color-primary); flex-shrink: 0; }
+.demo-desc { font-size: 18px; color: var(--color-text-mid); line-height: 1.5; }
+.demo-desc strong { color: var(--color-text-hi); }
+
+/* ═══════ SLIDE 7: FEATURES ═══════ */
+.features-layout { display: flex; gap: 60px; flex: 1; align-items: center; }
+.features-left { flex: 0.6; }
+.features-right { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+.feature-card { display: flex; gap: 20px; padding: 28px 32px; }
+.feature-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 24px; }
+.feature-icon.cyan { background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.15); }
+.feature-icon.red { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.15); }
+.feature-icon.green { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.15); }
+.feature-icon.amber { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.15); }
+.feature-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.feature-desc { font-size: 16px; color: var(--color-text-low); line-height: 1.4; }
+
+/* ═══════ SLIDE 8: WHY NOW ═══════ */
+.why-layout { display: flex; gap: 80px; align-items: center; flex: 1; }
+.why-left { flex: 1; }
+.why-right { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+.moat-card { padding: 24px 28px; display: flex; gap: 16px; align-items: flex-start; }
+.moat-marker { width: 4px; min-height: 40px; border-radius: 2px; flex-shrink: 0; }
+
+/* ═══════ SLIDE 9: TRACTION ═══════ */
+.traction-layout { display: flex; gap: 80px; align-items: center; flex: 1; }
+.traction-left { flex: 1; }
+.traction-right { flex: 1; }
+.traction-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.traction-stat { padding: 28px; text-align: center; }
+.traction-val { font-size: 48px; font-weight: 800; letter-spacing: -2px; margin-bottom: 8px; }
+.traction-label { font-family: var(--font-mono); font-size: 12px; color: var(--color-text-low); letter-spacing: 1px; }
+
+/* ═══════ SLIDE 10: THE ASK ═══════ */
+.ask-layout { display: flex; gap: 80px; align-items: center; flex: 1; }
+.ask-left { flex: 1; }
+.ask-right { flex: 0.8; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+.ask-tracks { display: flex; flex-direction: column; gap: 16px; margin-top: 32px; }
+.ask-track { display: flex; align-items: center; gap: 16px; padding: 16px 24px; }
+.ask-track-prize { font-family: var(--font-mono); font-size: 20px; font-weight: 700; min-width: 80px; }
+.ask-track-name { font-size: 18px; color: var(--color-text-mid); }
+.ask-qr { width: 160px; height: 160px; border-radius: 12px; border: 1px solid var(--color-border); }
+.ask-closer { font-size: 20px; color: var(--color-text-low); font-style: italic; text-align: center; max-width: 300px; }
+.ask-links { font-family: var(--font-mono); font-size: 13px; color: var(--color-text-low); text-align: center; }
+</style>
+</head>
+<body>
+
+<div id="stage">
+
+<!-- ════════════════════════════════════════════════════════════
+     SLIDE 1: COVER
+     ════════════════════════════════════════════════════════════ -->
+<div class="slide active" data-slide="1">
+  <div class="slide-bg"></div>
+  <div class="grid-bg"></div>
+  <div class="slide-content">
+    <div class="cover-layout">
+      <div class="cover-left">
+        <div class="label">Arbitrum Open House London 2026</div>
+        <div class="cover-name"><span class="text-gradient">Veto</span> ✋</div>
+        <div class="cover-tagline">Your AI tried. Veto said no.<br>WASM-powered trade interception on Robinhood Chain.</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <span class="cover-badge">Solidity + Rust/Stylus</span>
+          <span class="cover-badge">Robinhood Chain</span>
+          <span class="cover-badge">90% Gas Savings</span>
+        </div>
+      </div>
+      <div class="cover-right">
+        <svg class="cover-shield" viewBox="0 0 512 512" fill="none">
+          <path d="M256 52 L440 138 C440 138 456 332 256 470 C56 332 72 138 72 138 Z" stroke="url(#sg)" stroke-width="2" fill="none" opacity="0.6"/>
+          <path d="M256 82 L410 155 C410 155 424 318 256 436 C88 318 102 155 102 155 Z" fill="#0C1527" opacity="0.5"/>
+          <defs><linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#06B6D4"/><stop offset="100%" stop-color="#EF4444"/></linearGradient></defs>
+        </svg>
+        <div class="cover-stat">142K gas → ~14K gas<br>WASM coprocessor</div>
+      </div>
+    </div>
+  </div>
+  <aside class="speaker-notes">Introduce Veto: a hybrid EVM/WASM execution sandbox. The shield visual is the brand — Veto physically blocks dangerous AI trades. Mention Robinhood Chain deployment and the Stylus WASM advantage.</aside>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SLIDE 2: HOOK — Big Stat
+     ════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="2">
+  <div class="slide-bg"></div>
+  <div class="grid-bg"></div>
+  <div class="slide-content">
+    <div class="hook-center">
+      <div class="label">The AI Agent Problem</div>
+      <div class="hook-number text-gradient">$1.7B</div>
+      <div class="hook-context">Lost to DeFi exploits in 2024 — and AI agents are making it worse by optimizing for return, not safety.</div>
+    </div>
+  </div>
+  <aside class="speaker-notes">$1.7 billion in DeFi losses from exploits in 2024 alone. Now add AI agents that trade autonomously with no understanding of risk. That's the world we're building Veto for.</aside>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SLIDE 3: PROBLEM
+     ════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="3">
+  <div class="slide-bg"></div>
+  <div class="grid-bg"></div>
+  <div class="slide-content">
+    <div class="problem-layout">
+      <div class="problem-left">
+        <div class="label">The Problem</div>
+        <h2 class="headline" style="margin-bottom:24px;">AI Agents<br>Can't Say No</h2>
+        <p class="body-text">A DeFi yield optimizer spots a 10× APY pool. It doesn't check historical volatility. It doesn't compute variance. It just executes — and your ETH is gone.</p>
+      </div>
+      <div class="problem-right">
+        <div class="problem-card">
+          <div class="problem-card-title">NO MATH GUARDRAILS</div>
+          <div class="problem-card-text">Smart contract wallets control <em>who</em> can call, not <em>what's sane</em> to call. Access control ≠ risk control.</div>
+        </div>
+        <div class="problem-card">
+          <div class="problem-card-title">SOLIDITY IS TOO EXPENSIVE</div>
+          <div class="problem-card-text">Calculating variance over 100 data points in Solidity costs 211,246 gas. At scale, on-chain math is uneconomical.</div>
+        </div>
+        <div class="problem-card">
+          <div class="problem-card-title">AI DOESN'T UNDERSTAND RISK</div>
+          <div class="problem-card-text">LLMs optimize for yield metrics, not portfolio safety. They hallucinate confidence in volatile positions.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <aside class="speaker-notes">Walk through the three failure modes: no math on-chain, Solidity too expensive for stats, and AI agents that don't understand risk. The specific 211K gas number makes this concrete.</aside>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SLIDE 4: SOLUTION
+     ════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="4">
+  <div class="slide-bg"></div>
+  <div class="grid-bg"></div>
+  <div class="slide-content">
+    <div class="solution-layout">
+      <div class="solution-left">
+        <div class="label">The Solution</div>
+        <h2 class="headline" style="margin-bottom:24px;">Rust Does<br>The Math</h2>
+        <p class="body-text">Veto uses Arbitrum Stylus to run a Rust-compiled WASM coprocessor on-chain. It computes asset variance in ~14K gas and physically reverts dangerous trades.</p>
+        <div style="margin-top:32px;display:flex;gap:16px;">
+          <div class="glass hud-corners" style="padding:16px 24px;text-align:center;">
+            <div class="mono text-primary" style="font-size:32px;font-weight:700;">~14K</div>
+            <div class="mono text-low" style="font-size:11px;">WASM gas</div>
+          </div>
+          <div class="glass hud-corners" style="padding:16px 24px;text-align:center;">
+            <div class="mono" style="font-size:32px;font-weight:700;text-decoration:line-through;color:var(--color-text-low);">142K</div>
+            <div class="mono text-low" style="font-size:11px;">Solidity gas</div>
+          </div>
+          <div class="glass hud-corners" style="padding:16px 24px;text-align:center;">
+            <div class="mono text-success" style="font-size:32px;font-weight:700;">90%</div>
+            <div class="mono text-low" style="font-size:11px;">saved</div>
+          </div>
+        </div>
+      </div>
+      <div class="solution-right">
+        <div class="browser-frame">
+          <div class="browser-bar">
+            <span class="browser-dot r"></span>
+            <span class="browser-dot y"></span>
+            <span class="browser-dot g"></span>
+            <span class="browser-url">localhost:3000</span>
+          </div>
+          <div class="browser-body">
+            <!-- SWAP: replace with dashboard-screenshot.png -->
+            <img src="https://placehold.co/800x500/020617/06B6D4?text=Veto+Dashboard%0ATrade+Intercepted" alt="Veto Dashboard">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <aside class="speaker-notes">The solution is a Rust math coprocessor compiled to WASM via Stylus. Key differentiator: 90% gas savings. Solidity holds the money, Rust does the math. Show the three stat cards: 14K vs 142K = 90% saved.</aside>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SLIDE 5: ARCHITECTURE
+     ════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="5">
+  <div class="slide-bg"></div>
+  <div class="grid-bg"></div>
+  <div class="slide-content" style="padding:40px 60px;">
+    <div class="label" style="text-align:center;">How It Works</div>
+    <div class="arch-layout">
+      <svg class="arch-img" viewBox="0 0 1400 600" xmlns="http://www.w3.org/2000/svg">
+        <!-- Background -->
+        <rect width="1400" height="600" fill="#020617" rx="16"/>
+        <!-- Nodes -->
+        <g>
+          <!-- AI Agent -->
+          <rect x="40" y="180" width="300" height="240" rx="16" fill="#0C1527" stroke="rgba(6,182,212,0.2)" stroke-width="1"/>
+          <rect x="40" y="180" width="300" height="1" fill="#06B6D4" opacity="0.3"/>
+          <text x="190" y="228" text-anchor="middle" fill="#F8FAFC" font-family="Inter Tight,system-ui" font-size="22" font-weight="700">AI Agent</text>
+          <text x="190" y="256" text-anchor="middle" fill="#06B6D4" font-family="JetBrains Mono,monospace" font-size="13">Python · web3.py</text>
+          <text x="70" y="300" fill="#CBD5E1" font-family="JetBrains Mono,monospace" font-size="13">• Fetches 100 prices</text>
+          <text x="70" y="326" fill="#CBD5E1" font-family="JetBrains Mono,monospace" font-size="13">• Formats uint256[] calldata</text>
+          <text x="70" y="352" fill="#CBD5E1" font-family="JetBrains Mono,monospace" font-size="13">• Signs &amp; submits tx</text>
+
+          <!-- VetoVault.sol -->
+          <rect x="460" y="160" width="320" height="280" rx="16" fill="#0C1527" stroke="rgba(34,211,238,0.3)" stroke-width="1.5"/>
+          <rect x="460" y="160" width="320" height="1.5" fill="#22D3EE" opacity="0.5"/>
+          <text x="620" y="210" text-anchor="middle" fill="#F8FAFC" font-family="Inter Tight,system-ui" font-size="22" font-weight="700">VetoVault.sol</text>
+          <text x="620" y="238" text-anchor="middle" fill="#22D3EE" font-family="JetBrains Mono,monospace" font-size="13">EVM · Solidity</text>
+          <text x="490" y="284" fill="#CBD5E1" font-family="JetBrains Mono,monospace" font-size="13">• Holds ETH vault funds</text>
+          <text x="490" y="310" fill="#CBD5E1" font-family="JetBrains Mono,monospace" font-size="13">• Owner access control</text>
+          <text x="490" y="336" fill="#CBD5E1" font-family="JetBrains Mono,monospace" font-size="13">• Delegates math → Stylus</text>
+          <!-- Central glow -->
+          <ellipse cx="620" cy="300" rx="160" ry="100" fill="#06B6D4" opacity="0.03"/>
+
+          <!-- RiskEngine.rs -->
+          <rect x="900" y="160" width="320" height="280" rx="16" fill="#0C1527" stroke="rgba(239,68,68,0.2)" stroke-width="1"/>
+          <rect x="900" y="160" width="320" height="1" fill="#EF4444" opacity="0.4"/>
+          <text x="1060" y="210" text-anchor="middle" fill="#F8FAFC" font-family="Inter Tight,system-ui" font-size="22" font-weight="700">RiskEngine.rs</text>
+          <text x="1060" y="238" text-anchor="middle" fill="#EF4444" font-family="JetBrains Mono,monospace" font-size="13">WASM · Arbitrum Stylus</text>
+          <text x="930" y="284" fill="#CBD5E1" font-family="JetBrains Mono,monospace" font-size="13">• Computes variance (U256)</text>
+          <text x="930" y="310" fill="#CBD5E1" font-family="JetBrains Mono,monospace" font-size="13">• no_std · no floats</text>
+          <text x="930" y="336" fill="#CBD5E1" font-family="JetBrains Mono,monospace" font-size="13">• Reverts if &gt; threshold</text>
+
+          <!-- Arrows -->
+          <defs>
+            <marker id="a1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0 0L8 3L0 6" fill="none" stroke="#06B6D4" stroke-width="1.5"/></marker>
+            <marker id="a2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0 0L8 3L0 6" fill="none" stroke="#22D3EE" stroke-width="1.5"/></marker>
+          </defs>
+          <line x1="340" y1="300" x2="455" y2="300" stroke="#06B6D4" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#a1)" opacity="0.6"/>
+          <line x1="780" y1="300" x2="895" y2="300" stroke="#22D3EE" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#a2)" opacity="0.6"/>
+
+          <!-- Edge labels -->
+          <rect x="360" y="280" width="80" height="22" rx="4" fill="#020617" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+          <text x="400" y="296" text-anchor="middle" fill="#F8FAFC" font-family="JetBrains Mono,monospace" font-size="10">trade()</text>
+          <rect x="800" y="280" width="80" height="22" rx="4" fill="#020617" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+          <text x="840" y="296" text-anchor="middle" fill="#F8FAFC" font-family="JetBrains Mono,monospace" font-size="10">check()</text>
+
+          <!-- Outcome arrows -->
+          <line x1="1060" y1="445" x2="1060" y2="490" stroke="#94A3B8" stroke-width="1" stroke-dasharray="3 3" opacity="0.4"/>
+          <!-- Pass -->
+          <rect x="920" y="495" width="120" height="40" rx="8" fill="rgba(34,197,94,0.08)" stroke="rgba(34,197,94,0.25)" stroke-width="1"/>
+          <text x="980" y="521" text-anchor="middle" fill="#22C55E" font-family="JetBrains Mono,monospace" font-size="14" font-weight="600">EXECUTE</text>
+          <!-- Block -->
+          <rect x="1100" y="495" width="120" height="40" rx="8" fill="rgba(239,68,68,0.08)" stroke="rgba(239,68,68,0.25)" stroke-width="1"/>
+          <text x="1160" y="521" text-anchor="middle" fill="#EF4444" font-family="JetBrains Mono,monospace" font-size="14" font-weight="600">REVERT</text>
+
+          <!-- Decision label -->
+          <text x="1060" y="476" text-anchor="middle" fill="#94A3B8" font-family="JetBrains Mono,monospace" font-size="11">variance > threshold?</text>
+
+          <!-- Gas chip -->
+          <rect x="500" y="515" width="320" height="40" rx="8" fill="rgba(6,182,212,0.06)" stroke="rgba(6,182,212,0.15)" stroke-width="1"/>
+          <text x="660" y="541" text-anchor="middle" fill="#CBD5E1" font-family="JetBrains Mono,monospace" font-size="13">Stylus: <tspan fill="#06B6D4" font-weight="600">~14K gas</tspan>  vs  Solidity: <tspan fill="#94A3B8" text-decoration="line-through">142K gas</tspan></text>
+        </g>
+      </svg>
+    </div>
+  </div>
+  <aside class="speaker-notes">Walk left to right: Agent fetches prices, VetoVault receives the trade call, delegates math to RiskEngine (Stylus/WASM), which computes variance in 14K gas. If variance exceeds threshold, the tx reverts. This is a physical block, not a suggestion.</aside>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SLIDE 6: LIVE DEMO
+     ════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="6">
+  <div class="slide-bg"></div>
+  <div class="grid-bg"></div>
+  <div class="slide-content">
+    <div class="label">Live Demo</div>
+    <div class="demo-layout">
+      <div class="demo-screens">
+        <div class="demo-card">
+          <span class="demo-callout">1</span>
+          <!-- SWAP: replace with demo-price-chart.png -->
+          <img src="https://placehold.co/500x320/0C1527/06B6D4?text=Price+Chart%0A100+Candles" alt="Price Chart">
+        </div>
+        <div class="demo-card">
+          <span class="demo-callout">2</span>
+          <!-- SWAP: replace with demo-agent-terminal.png -->
+          <img src="https://placehold.co/500x320/0C1527/22C55E?text=Agent+Terminal%0Apython+agent.py" alt="Agent Terminal">
+        </div>
+        <div class="demo-card">
+          <span class="demo-callout">3</span>
+          <!-- SWAP: replace with demo-intercept-card.png -->
+          <img src="https://placehold.co/500x320/0C1527/EF4444?text=TRADE+INTERCEPTED%0AVariance+286966565" alt="Intercept Card">
+        </div>
+        <div class="demo-card">
+          <span class="demo-callout">4</span>
+          <!-- SWAP: replace with demo-event-log.png -->
+          <img src="https://placehold.co/500x320/0C1527/CBD5E1?text=Event+Log%0AOn-chain+History" alt="Event Log">
+        </div>
+      </div>
+      <div class="demo-list">
+        <div class="demo-item"><div class="demo-num">1</div><div class="demo-desc"><strong>Price feed</strong> — 100 real candles from CoinGecko</div></div>
+        <div class="demo-item"><div class="demo-num">2</div><div class="demo-desc"><strong>Agent executes</strong> — Python submits trade tx</div></div>
+        <div class="demo-item"><div class="demo-num">3</div><div class="demo-desc"><strong>Veto intercepts</strong> — Stylus reverts with custom error</div></div>
+        <div class="demo-item"><div class="demo-num">4</div><div class="demo-desc"><strong>On-chain proof</strong> — Full event log on block explorer</div></div>
+      </div>
+    </div>
+  </div>
+  <aside class="speaker-notes">This is the judge demo flow. Show the dashboard, run the agent, watch the interception happen in real-time, then verify on the block explorer. The entire round-trip is under 3 seconds.</aside>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SLIDE 7: KEY FEATURES
+     ════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="7">
+  <div class="slide-bg"></div>
+  <div class="grid-bg"></div>
+  <div class="slide-content">
+    <div class="features-layout">
+      <div class="features-left">
+        <div class="label">Key Capabilities</div>
+        <h2 class="headline" style="margin-bottom:24px;">Not a Suggestion.<br>A <span class="text-accent">Physical Block.</span></h2>
+        <p class="body-text">Every feature is designed to make the REVERT happen at the EVM level — no off-chain oracles, no governance votes, no delay.</p>
+      </div>
+      <div class="features-right">
+        <div class="feature-card glass hud-corners">
+          <div class="feature-icon cyan"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2 2"/></svg></div>
+          <div><div class="feature-title">WASM Variance Engine</div><div class="feature-desc">U256 integer math, no_std, no floats — 90% cheaper than Solidity</div></div>
+        </div>
+        <div class="feature-card glass hud-corners">
+          <div class="feature-icon red"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="1.5"><path d="M12 2L2 20h20Z"/><line x1="12" y1="9" x2="12" y2="13"/></svg></div>
+          <div><div class="feature-title">Custom Error Reverts</div><div class="feature-desc">VolatilityExceedsThreshold(computed, limit) — typed, debuggable</div></div>
+        </div>
+        <div class="feature-card glass hud-corners">
+          <div class="feature-icon green"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="1.5"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M3 11h18"/></svg></div>
+          <div><div class="feature-title">Hybrid EVM/WASM</div><div class="feature-desc">Solidity custody + Rust math — each contract does what it's best at</div></div>
+        </div>
+        <div class="feature-card glass hud-corners">
+          <div class="feature-icon amber"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 17l3-5 3 3 4-6"/></svg></div>
+          <div><div class="feature-title">SOC Dashboard</div><div class="feature-desc">Cyberpunk control panel — real-time trade monitoring and agent terminal</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <aside class="speaker-notes">Emphasize the physical block aspect — this isn't a suggestion engine, it's an EVM revert. Walk through the four features quickly: WASM engine, custom errors, hybrid architecture, and the monitoring dashboard.</aside>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SLIDE 8: WHY NOW / WHY US
+     ════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="8">
+  <div class="slide-bg"></div>
+  <div class="grid-bg"></div>
+  <div class="slide-content">
+    <div class="why-layout">
+      <div class="why-left">
+        <div class="label">Why Now</div>
+        <h2 class="headline" style="margin-bottom:24px;">Three Forces<br>Converging</h2>
+        <p class="body-text">Stylus shipped. AI agents are trading. Robinhood Chain launched. The infrastructure for on-chain risk computation didn't exist 6 months ago.</p>
+      </div>
+      <div class="why-right">
+        <div class="moat-card glass hud-corners">
+          <div class="moat-marker" style="background:var(--color-primary);"></div>
+          <div><div class="feature-title">Stylus is production-ready</div><div class="feature-desc" style="color:var(--color-text-low)">Rust/WASM contracts on Arbitrum — 10× cheaper compute for statistical functions</div></div>
+        </div>
+        <div class="moat-card glass hud-corners">
+          <div class="moat-marker" style="background:var(--color-accent);"></div>
+          <div><div class="feature-title">AI agents are unguarded</div><div class="feature-desc" style="color:var(--color-text-low)">ERC-4337 wallets have no execution physics — Veto is the first risk layer</div></div>
+        </div>
+        <div class="moat-card glass hud-corners">
+          <div class="moat-marker" style="background:var(--color-success);"></div>
+          <div><div class="feature-title">Robinhood Chain = retail</div><div class="feature-desc" style="color:var(--color-text-low)">Millions of retail users will delegate to AI — they need protection, not complexity</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <aside class="speaker-notes">Stylus, AI agents, and Robinhood Chain — three things that converged in the last 6 months. Veto is only possible because Stylus makes on-chain math cheap enough to use on every trade.</aside>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SLIDE 9: TRACTION
+     ════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="9">
+  <div class="slide-bg"></div>
+  <div class="grid-bg"></div>
+  <div class="slide-content">
+    <div class="traction-layout">
+      <div class="traction-left">
+        <div class="label">Shipped Solo</div>
+        <h2 class="headline" style="margin-bottom:24px;">Built in<br><span class="text-primary">14 Days</span></h2>
+        <p class="body-text">One developer. Two smart contracts. Three languages. Full-stack from Rust variance math to cyberpunk dashboard.</p>
+      </div>
+      <div class="traction-right">
+        <div class="traction-grid">
+          <div class="traction-stat glass hud-corners"><div class="traction-val text-primary">23</div><div class="traction-label">Passing Tests</div></div>
+          <div class="traction-stat glass hud-corners"><div class="traction-val text-success">90%</div><div class="traction-label">Gas Saved</div></div>
+          <div class="traction-stat glass hud-corners"><div class="traction-val text-accent">3</div><div class="traction-label">Languages</div></div>
+          <div class="traction-stat glass hud-corners"><div class="traction-val" style="color:var(--color-warning);">1</div><div class="traction-label">Developer</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <aside class="speaker-notes">Solo developer built the entire stack in 14 days: Solidity vault with 23 Foundry tests, Rust WASM coprocessor, Python AI agent, and a Next.js dashboard. Three programming languages, one person.</aside>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SLIDE 10: THE ASK
+     ════════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="10">
+  <div class="slide-bg"></div>
+  <div class="grid-bg"></div>
+  <div class="slide-content">
+    <div class="ask-layout">
+      <div class="ask-left">
+        <div class="label">The Ask</div>
+        <h2 class="headline" style="margin-bottom:16px;">Veto ✋</h2>
+        <p class="body-text" style="margin-bottom:32px;"><em>"Solidity holds the money. Rust does the math."</em></p>
+        <div class="ask-tracks">
+          <div class="ask-track glass hud-corners">
+            <div class="ask-track-prize text-primary">$40K</div>
+            <div class="ask-track-name">Overall — Robinhood Chain Track</div>
+          </div>
+          <div class="ask-track glass hud-corners">
+            <div class="ask-track-prize text-success">$7K</div>
+            <div class="ask-track-name">Best Agentic Project</div>
+          </div>
+          <div class="ask-track glass hud-corners">
+            <div class="ask-track-prize" style="color:var(--color-warning);">$30K</div>
+            <div class="ask-track-name">Grants — Milestone-based</div>
+          </div>
+        </div>
+      </div>
+      <div class="ask-right">
+        <!-- SWAP: replace with qr-code.png -->
+        <img class="ask-qr" src="https://placehold.co/160x160/0C1527/06B6D4?text=QR" alt="QR Code">
+        <div class="ask-links">github.com/edycutjong/veto<br>@edycutjong</div>
+        <div class="ask-closer">"Your AI tried. Veto said no."</div>
+      </div>
+    </div>
+  </div>
+  <aside class="speaker-notes">Final slide. Reiterate the tagline. Show the three prize tracks you're targeting. Point to the QR code for the GitHub repo. Close with the memorable line: Your AI tried. Veto said no.</aside>
+</div>
+
+<!-- ── Nav CSS (injected inline to keep single-file) ── -->
+<style>
+/* ── Top progress bar ── */
+#progress-bar { position:fixed; top:0; left:0; z-index:100; height:2px; background:linear-gradient(90deg,var(--color-primary),var(--color-accent)); transition:width .4s ease; }
+
+/* ── Slide indicator top-right ── */
+#slide-indicator { position:fixed; top:22px; right:30px; z-index:100; font-family:var(--font-mono); font-size:11px; color:rgba(6,182,212,0.5); letter-spacing:.1em; }
+
+/* ── Bottom nav bar ── */
+#nav { position:fixed; bottom:28px; left:50%; transform:translateX(-50%); z-index:100; display:flex; align-items:center; gap:20px; }
+.nav-btn {
+  background:rgba(6,182,212,0.1); border:1px solid rgba(6,182,212,0.18);
+  color:var(--color-primary); font-family:var(--font-mono); font-size:13px;
+  padding:8px 22px; border-radius:4px; cursor:pointer;
+  transition:background .2s, border-color .2s; letter-spacing:.05em;
+}
+.nav-btn:hover { background:rgba(6,182,212,0.2); border-color:var(--color-primary); }
+.nav-btn-play { border-color:rgba(34,197,94,0.3); color:var(--color-success); background:rgba(34,197,94,0.08); }
+.nav-btn-play:hover { background:rgba(34,197,94,0.18); border-color:var(--color-success); }
+.nav-btn-play.playing { border-color:rgba(245,158,11,0.4); color:var(--color-warning); background:rgba(245,158,11,0.1); }
+.nav-btn-play.playing:hover { background:rgba(245,158,11,0.2); border-color:var(--color-warning); }
+.nav-btn-zoom { padding:8px 13px; font-size:15px; color:var(--color-text-low); border-color:rgba(100,116,139,0.2); background:rgba(100,116,139,0.06); letter-spacing:0; }
+.nav-btn-zoom:hover { color:var(--color-text-hi); border-color:rgba(100,116,139,0.4); background:rgba(100,116,139,0.14); }
+#zoom-level { font-family:var(--font-mono); font-size:11px; color:var(--color-text-low); min-width:36px; text-align:center; letter-spacing:.06em; }
+#counter { position:static; font-family:var(--font-mono); font-size:12px; color:var(--color-text-low); min-width:60px; text-align:center; letter-spacing:.08em; }
+
+/* ── Auto-play progress bar ── */
+#auto-progress { position:fixed; bottom:72px; left:50%; transform:translateX(-50%); width:160px; height:2px; background:rgba(34,197,94,0.15); border-radius:2px; opacity:0; transition:opacity .3s; }
+#auto-progress-fill { height:100%; width:0%; background:var(--color-success); border-radius:2px; }
+
+/* ── Slide exit transition ── */
+.slide.exit-left { display:flex !important; opacity:0; transition:opacity .4s ease; }
+
+/* ── Hide nav in print ── */
+@media print { #nav, #progress-bar, #slide-indicator, #auto-progress, #notes-panel { display:none !important; } }
+</style>
+
+<!-- ── Progress bar ── -->
+<div id="progress-bar"></div>
+
+<!-- ── Slide indicator ── -->
+<div id="slide-indicator">01 / 10</div>
+
+<!-- ── Auto-play progress ── -->
+<div id="auto-progress"><div id="auto-progress-fill"></div></div>
+
+<!-- ── Presenter notes panel ── -->
+<div id="notes-panel"></div>
+
+<!-- ── Nav bar ── -->
+<div id="nav">
+  <button class="nav-btn nav-btn-zoom" id="btn-zoom-out" title="Decrease size (−)">A−</button>
+  <span id="zoom-level">100%</span>
+  <button class="nav-btn nav-btn-zoom" id="btn-zoom-in" title="Increase size (+)">A+</button>
+  <button class="nav-btn" id="btn-prev">← PREV</button>
+  <button class="nav-btn nav-btn-play" id="btn-auto" title="Auto-play (5s per slide)">▶ AUTO</button>
+  <div id="counter">01 / 10</div>
+  <button class="nav-btn" id="btn-next">NEXT →</button>
+</div>
+
+<script>
+/* ── Zoom ── */
+(function () {
+  const stage     = document.getElementById('stage');
+  const zoomLabel = document.getElementById('zoom-level');
+  const STEP = 0.08;
+  let zoom = 1;
+
+  function applyZoom() {
+    zoom = Math.max(0.5, Math.min(2.0, +zoom.toFixed(2)));
+    stage.style.transform = zoom === 1
+      ? 'translate(-50%, -50%) scale(' + calcScale() + ')'
+      : 'translate(-50%, -50%) scale(' + (calcScale() * zoom) + ')';
+    zoomLabel.textContent = Math.round(zoom * 100) + '%';
+    zoomLabel.style.color = zoom === 1 ? 'var(--color-text-low)' : 'var(--color-primary)';
+  }
+
+  function calcScale() {
+    const sh = (document.body.classList.contains('presenter') ? window.innerHeight * 0.8 : window.innerHeight) / 1080;
+    return Math.min(window.innerWidth / 1920, sh);
+  }
+
+  window.applyZoom = applyZoom;
+  window.calcScale = calcScale;
+
+  document.getElementById('btn-zoom-in').addEventListener('click',  () => { zoom += STEP; applyZoom(); });
+  document.getElementById('btn-zoom-out').addEventListener('click', () => { zoom -= STEP; applyZoom(); });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === '=' || e.key === '+') { e.preventDefault(); zoom += STEP; applyZoom(); }
+    if (e.key === '-' || e.key === '_') { e.preventDefault(); zoom -= STEP; applyZoom(); }
+    if (e.key === '0') { zoom = 1; applyZoom(); }
+  });
+
+  // Initial scale
+  function doScale() {
+    const s = calcScale();
+    stage.style.transform = 'translate(-50%, -50%) scale(' + (s * zoom) + ')';
+  }
+  window.addEventListener('resize', doScale);
+  doScale();
+})();
+
+/* ── Slide Navigation ── */
+(function () {
+  const slides      = document.querySelectorAll('.slide');
+  const counter     = document.getElementById('counter');
+  const indicator   = document.getElementById('slide-indicator');
+  const progressBar = document.getElementById('progress-bar');
+  const btnAuto     = document.getElementById('btn-auto');
+  const autoBar     = document.getElementById('auto-progress');
+  const autoFill    = document.getElementById('auto-progress-fill');
+  const notesPanel  = document.getElementById('notes-panel');
+  const total       = slides.length;
+  const SLIDE_MS    = 5000;
+
+  let current    = 0;
+  let autoTimer  = null;
+  let playing    = false;
+
+  function pad(n) { return String(n + 1).padStart(2, '0'); }
+
+  function goTo(idx) {
+    if (idx < 0 || idx >= total) return;
+    const prev = current;
+    slides[prev].classList.remove('active');
+    slides[prev].classList.add('exit-left');
+    current = idx;
+    slides[current].classList.add('active');
+    slides[current].classList.remove('exit-left');
+    setTimeout(() => slides[prev].classList.remove('exit-left'), 500);
+    const label = pad(current) + ' / ' + pad(total - 1);
+    counter.textContent   = label;
+    indicator.textContent = label;
+    progressBar.style.width = ((current + 1) / total * 100) + '%';
+    // Update notes
+    const notes = slides[current].querySelector('.speaker-notes');
+    notesPanel.textContent = notes ? notes.textContent : '';
+  }
+
+  function next() { goTo(current + 1); }
+  function prev() { goTo(current - 1); }
+
+  /* ── Auto-play ── */
+  function startFill() {
+    autoFill.style.transition = 'none';
+    autoFill.style.width = '0%';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        autoFill.style.transition = 'width ' + SLIDE_MS + 'ms linear';
+        autoFill.style.width = '100%';
+      });
+    });
+  }
+
+  function startAuto() {
+    playing = true;
+    btnAuto.textContent = '⏸ PAUSE';
+    btnAuto.classList.add('playing');
+    autoBar.style.opacity = '1';
+    startFill();
+    autoTimer = setInterval(() => {
+      if (current >= total - 1) { stopAuto(); goTo(0); }
+      else { next(); startFill(); }
+    }, SLIDE_MS);
+  }
+
+  function stopAuto() {
+    playing = false;
+    clearInterval(autoTimer);
+    autoTimer = null;
+    btnAuto.textContent = '▶ AUTO';
+    btnAuto.classList.remove('playing');
+    autoBar.style.opacity = '0';
+    autoFill.style.transition = 'none';
+    autoFill.style.width = '0%';
+  }
+
+  btnAuto.addEventListener('click', () => { playing ? stopAuto() : startAuto(); });
+  document.getElementById('btn-next').addEventListener('click', () => { if (playing) stopAuto(); next(); });
+  document.getElementById('btn-prev').addEventListener('click', () => { if (playing) stopAuto(); prev(); });
+
+  /* ── Keyboard ── */
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); if (playing) stopAuto(); next(); }
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                    { e.preventDefault(); if (playing) stopAuto(); prev(); }
+    if (e.key === 'Home') { stopAuto(); goTo(0); }
+    if (e.key === 'End')  { stopAuto(); goTo(total - 1); }
+    if (e.key === 'p' || e.key === 'P') { playing ? stopAuto() : startAuto(); }
+    if (e.key === 'c' || e.key === 'C') {
+      document.body.classList.toggle('debug-contrast');
+      document.querySelectorAll('h2, p, .feature-title, .feature-desc, .traction-val, .traction-label, .ask-track-prize, .hook-number, .hook-context, .problem-card-text, .body-text, .cover-tagline, .demo-desc').forEach(el => el.classList.toggle('contrast-check'));
+    }
+    if (e.key === 'n' || e.key === 'N') {
+      document.body.classList.toggle('presenter');
+      if (typeof window.applyZoom === 'function') window.applyZoom();
+    }
+  });
+
+  /* ── Touch swipe ── */
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (dx < -50) { if (playing) stopAuto(); next(); }
+    if (dx >  50) { if (playing) stopAuto(); prev(); }
+  });
+
+  // Initialize progress bar
+  progressBar.style.width = (1 / total * 100) + '%';
+
+  // Initialize notes
+  const notes = slides[0].querySelector('.speaker-notes');
+  notesPanel.textContent = notes ? notes.textContent : '';
+})();
+</script>
+</body>
+</html>
+
