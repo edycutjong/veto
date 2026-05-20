@@ -1,15 +1,15 @@
 """
-AegisVault — Autonomous Trading Agent
+Veto — Autonomous Trading Agent
 
 An AI agent that:
 1. Monitors market conditions and identifies yield opportunities
 2. Fetches historical prices from CoinGecko (or demo data)
 3. Formats price arrays as on-chain calldata
-4. Submits trade proposals to the AegisVault contract
+4. Submits trade proposals to the Veto vault contract
 5. The Stylus Risk Engine either APPROVES or BLOCKS the trade
 
 The agent is intentionally aggressive — it WILL try to buy volatile assets.
-This demonstrates that AegisVault physically prevents bad trades.
+This demonstrates that Veto physically prevents bad trades.
 
 Usage:
     python agent.py                     # Demo mode (mock prices)
@@ -46,14 +46,13 @@ RESET = "\033[0m"
 def banner():
     """Print the agent startup banner."""
     print(f"""
-{CYAN}{BOLD}╔══════════════════════════════════════════════════════════════╗
+{CYAN}{BOLD}╬══════════════════════════════════════════════════════════════╗
 ║                                                              ║
 ║   ░█▀▀░█▀▀░█▀▀░▀█▀░█▀▀░█░█░█▀█░█░█░█░░░▀█▀                ║
-║   ░█▀█░█▀▀░█░█░░█░░▀▀█░▀▄▀░█▀█░█░█░█░░░░█░                ║
-║   ░▀░▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░░▀░░▀░▀░▀▀▀░▀▀▀░░▀░                ║
+║                 V   E   T   O                               ║
 ║                                                              ║
 ║   Autonomous Trading Agent — WASM Risk Engine                ║
-║   "We let the AI trade. We let Rust do the math."            ║
+║   "Your AI tried. Veto said no."                             ║
 ║                                                              ║
 ╚══════════════════════════════════════════════════════════════╝{RESET}
 """)
@@ -127,13 +126,13 @@ def _run_demo_simulated():
     print(f"  {DIM}First 5: {scaled[:5]}{RESET}")
     time.sleep(0.5)
     
-    print_step(5, "Submitting trade to AegisVault...")
+    print_step(5, "Submitting trade to Veto...")
     print(f"  {DIM}Target: 0xDEX...Router (UniswapV3)")
     print(f"  Value: 2.0 ETH")
     print(f"  Prices: {len(scaled)} data points{RESET}")
     time.sleep(1)
     
-    print_step(6, "AegisVault → Stylus RiskEngine.checkVolatility()")
+    print_step(6, "Veto → Stylus RiskEngine.checkVolatility()")
     print(f"  {DIM}Computing variance over {len(scaled)} prices...")
     print(f"  Mean: ${meta['mean']}")
     print(f"  Spread: {meta['spread_pct']}%")
@@ -179,13 +178,13 @@ def _run_demo_simulated():
     print(f"  {DIM}Payload: {len(scaled_s)} prices × uint256, scaled ×10,000{RESET}")
     time.sleep(0.5)
     
-    print_step(5, "Submitting trade to AegisVault...")
+    print_step(5, "Submitting trade to Veto...")
     print(f"  {DIM}Target: 0xStak...Pool (Lido)")
     print(f"  Value: 1.0 ETH")
     print(f"  Prices: {len(scaled_s)} data points{RESET}")
     time.sleep(1)
     
-    print_step(6, "AegisVault → Stylus RiskEngine.checkVolatility()")
+    print_step(6, "Veto → Stylus RiskEngine.checkVolatility()")
     mean_s = sum(scaled_s) / len(scaled_s)
     sum_sq_s = sum((p - mean_s) ** 2 for p in scaled_s)
     var_s = sum_sq_s / len(scaled_s)
@@ -210,7 +209,7 @@ def _run_demo_simulated():
     print(f"  {GREEN}Trades executed:  1 (ETH staking){RESET}")
     print(f"  {RED}Trades blocked:   1 (RUGCOIN — too volatile){RESET}")
     print(f"  {CYAN}Funds saved:      2.0 ETH (would have been lost to rug pull){RESET}")
-    print(f"\n  {DIM}\"AegisVault. We let the AI trade, but we let Rust do the math.\"{RESET}\n")
+    print(f"\n  {DIM}\"Veto. We let the AI trade, but we let Rust do the math.\"{RESET}\n")
 
 
 def _run_live():
@@ -249,7 +248,7 @@ def _run_live():
     print_step(1, "Fetching prices for test asset...")
     scaled, raw, meta = get_prices_for_trade("volatile")
     
-    print_step(2, "Submitting trade to AegisVault...")
+    print_step(2, "Submitting trade to Veto...")
     
     # Use a dummy target (address(1)) with empty calldata for demo
     target = "0x0000000000000000000000000000000000000001"

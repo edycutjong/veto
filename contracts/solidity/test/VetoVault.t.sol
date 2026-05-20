@@ -2,19 +2,19 @@
 pragma solidity ^0.8.23;
 
 import "forge-std/Test.sol";
-import "../src/AegisVault.sol";
+import "../src/VetoVault.sol";
 import "../src/RiskEngineSol.sol";
 import "../src/IRiskEngine.sol";
 
 /**
- * @title AegisVault Test Suite
+ * @title VetoVault Test Suite
  * @notice Tests the vault + risk engine integration using the Solidity
  *         RiskEngine as a stand-in for the Stylus WASM version.
  *         The Solidity version has identical math, so the behavioral tests
  *         are valid for both implementations.
  */
-contract AegisVaultTest is Test {
-    AegisVault public vault;
+contract VetoVaultTest is Test {
+    VetoVault public vault;
     RiskEngineSol public riskEngine;
 
     address public owner = address(this);
@@ -29,7 +29,7 @@ contract AegisVaultTest is Test {
         riskEngine = new RiskEngineSol();
 
         // Deploy vault with 1000 bps (10%) threshold
-        vault = new AegisVault(address(riskEngine), 1000);
+        vault = new VetoVault(address(riskEngine), 1000);
 
         // Deploy mock target
         target = new MockTarget();
@@ -66,26 +66,26 @@ contract AegisVaultTest is Test {
 
     function test_setThreshold_emitsEvent() public {
         vm.expectEmit(false, false, false, true);
-        emit AegisVault.ThresholdUpdated(1000, 500);
+        emit VetoVault.ThresholdUpdated(1000, 500);
         vault.setThreshold(500);
     }
 
     function test_setAgent_emitsEvent() public {
         address newAgent = address(0xC1);
         vm.expectEmit(true, true, false, true);
-        emit AegisVault.AgentUpdated(agent, newAgent);
+        emit VetoVault.AgentUpdated(agent, newAgent);
         vault.setAgent(newAgent);
     }
 
     function test_onlyOwner_setThreshold() public {
         vm.prank(randomUser);
-        vm.expectRevert(AegisVault.NotOwner.selector);
+        vm.expectRevert(VetoVault.NotOwner.selector);
         vault.setThreshold(500);
     }
 
     function test_onlyOwner_setAgent() public {
         vm.prank(randomUser);
-        vm.expectRevert(AegisVault.NotOwner.selector);
+        vm.expectRevert(VetoVault.NotOwner.selector);
         vault.setAgent(address(0));
     }
 
@@ -97,13 +97,13 @@ contract AegisVaultTest is Test {
 
     function test_withdraw_emitsEvent() public {
         vm.expectEmit(true, false, false, true);
-        emit AegisVault.Withdrawn(owner, 1 ether);
+        emit VetoVault.Withdrawn(owner, 1 ether);
         vault.withdraw(payable(owner), 1 ether);
     }
 
     function test_onlyOwner_withdraw() public {
         vm.prank(randomUser);
-        vm.expectRevert(AegisVault.NotOwner.selector);
+        vm.expectRevert(VetoVault.NotOwner.selector);
         vault.withdraw(payable(randomUser), 1 ether);
     }
 
@@ -169,7 +169,7 @@ contract AegisVaultTest is Test {
         uint256[] memory prices = _stablePrices();
 
         vm.prank(randomUser);
-        vm.expectRevert(AegisVault.NotAgent.selector);
+        vm.expectRevert(VetoVault.NotAgent.selector);
         vault.executeTrade(address(target), "", 0, prices);
     }
 
@@ -177,7 +177,7 @@ contract AegisVaultTest is Test {
         uint256[] memory prices = _stablePrices();
 
         vm.prank(agent);
-        vm.expectRevert(AegisVault.InvalidTarget.selector);
+        vm.expectRevert(VetoVault.InvalidTarget.selector);
         vault.executeTrade(address(0), "", 0, prices);
     }
 
@@ -186,7 +186,7 @@ contract AegisVaultTest is Test {
         prices[0] = 1_000_000;
 
         vm.prank(agent);
-        vm.expectRevert(AegisVault.InsufficientPriceData.selector);
+        vm.expectRevert(VetoVault.InsufficientPriceData.selector);
         vault.executeTrade(address(target), "", 0, prices);
     }
 
@@ -196,7 +196,7 @@ contract AegisVaultTest is Test {
         vm.prank(agent);
         // We can't predict exact variance, so just check the event is emitted
         vm.expectEmit(true, true, false, false);
-        emit AegisVault.TradeExecuted(agent, address(target), 0, 0, 0);
+        emit VetoVault.TradeExecuted(agent, address(target), 0, 0, 0);
         vault.executeTrade(address(target), "", 0, prices);
     }
 

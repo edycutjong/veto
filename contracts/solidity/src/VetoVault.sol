@@ -4,14 +4,14 @@ pragma solidity ^0.8.23;
 import {IRiskEngine} from "./IRiskEngine.sol";
 
 /**
- * @title AegisVault — Hybrid EVM/WASM Execution Sandbox
+ * @title VetoVault — Hybrid EVM/WASM Execution Sandbox
  * @notice A smart vault that holds funds and delegates risk computation to a
  *         Stylus (WASM) coprocessor contract. AI agents can only execute trades
  *         that pass the on-chain variance check.
  *
  * Architecture:
  *   ┌─────────────┐     ┌──────────────┐     ┌──────────────┐
- *   │  AI Agent    │────▶│ AegisVault   │────▶│ RiskEngine   │
+ *   │  AI Agent    │────▶│ VetoVault   │────▶│ RiskEngine   │
  *   │  (Python)    │     │ (EVM-Funds)  │     │ (WASM-Math)  │
  *   └─────────────┘     └──────────────┘     └──────────────┘
  *
@@ -20,7 +20,7 @@ import {IRiskEngine} from "./IRiskEngine.sol";
  *      The vault forwards the prices to the Stylus contract for variance
  *      computation. If variance > threshold → REVERT. Funds stay safe.
  */
-contract AegisVault {
+contract VetoVault {
     // ─── Errors ───────────────────────────────────────────────
     
     /// @notice Thrown when the Stylus risk engine determines asset is too volatile

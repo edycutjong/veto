@@ -1,5 +1,5 @@
 """
-AegisVault Agent Configuration
+Veto Agent Configuration
 Shared constants, ABI fragments, and contract configuration.
 """
 
@@ -27,7 +27,7 @@ PRICE_SCALE = 10_000
 
 # ─── ABI Fragments ─────────────────────────────────────────────
 
-# AegisVault.sol — only the methods the agent calls
+# Veto.sol — only the methods the agent calls
 VAULT_ABI = json.loads("""[
     {
         "inputs": [

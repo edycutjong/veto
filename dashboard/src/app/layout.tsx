@@ -13,9 +13,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AegisVault — WASM Risk Engine",
+  title: "Veto — WASM Risk Engine",
   description:
-    "Hybrid EVM/WASM execution sandbox that physically prevents AI agents from executing hallucinated trades. Built on Robinhood Chain with Arbitrum Stylus.",
+    "Your AI tried. Veto said no. Hybrid EVM/WASM execution sandbox that physically prevents AI agents from executing hallucinated trades. Built on Robinhood Chain with Arbitrum Stylus.",
 };
 
 export default function RootLayout({

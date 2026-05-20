@@ -201,13 +201,13 @@ function TradeRow({ trade }: { trade: TradeAttempt }) {
 
 function AgentTerminal() {
   const [lines] = useState([
-    { text: "$ aegisvault-agent --mode demo", type: "cmd" as const },
+    { text: "$ veto-agent --mode demo", type: "cmd" as const },
     { text: "[Agent] Scanning DeFi markets for yield opportunities...", type: "info" as const },
     { text: "[Agent] Found: RUGCOIN pool — 10x APY on UniV3", type: "warn" as const },
     { text: "[Agent] Decision: Allocate 2.0 ETH → RUGCOIN swap", type: "warn" as const },
     { text: "[Agent] Fetching 50 historical prices from CoinGecko...", type: "info" as const },
     { text: "[Agent] Formatting price array as uint256[] calldata", type: "info" as const },
-    { text: "[Agent] Submitting tx to AegisVault...", type: "info" as const },
+    { text: "[Agent] Submitting tx to Veto Vault...", type: "info" as const },
     { text: "[Vault] → RiskEngine.checkVolatility(prices, 1000)", type: "info" as const },
     { text: "[Vault] Computing variance over 50 prices (WASM)...", type: "info" as const },
     { text: "[Vault] Variance: 286,966,565 bps > 1,000 bps limit", type: "error" as const },
@@ -237,7 +237,7 @@ function AgentTerminal() {
           <div className="w-3 h-3 rounded-full bg-amber-500/80" />
           <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
         </div>
-        <span className="text-xs text-slate-600 font-mono ml-2">agent@aegisvault ~ python agent.py</span>
+        <span className="text-xs text-slate-600 font-mono ml-2">agent@veto ~ python agent.py</span>
       </div>
       <div className="space-y-0.5 overflow-y-auto max-h-[500px]">
         {lines.map((line, i) => (
@@ -277,8 +277,9 @@ export default function Dashboard() {
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight">
-                <span className="text-cyan-400">Aegis</span>
-                <span className="text-slate-300">Vault</span>
+                <span className="text-cyan-400">Ve</span>
+                <span className="text-slate-300">to</span>
+                <span className="text-slate-600 text-sm ml-2 font-normal">✋</span>
               </h1>
               <p className="text-[10px] text-slate-600 uppercase tracking-widest">WASM Risk Engine • Robinhood Chain</p>
             </div>
@@ -436,10 +437,10 @@ export default function Dashboard() {
         {/* Footer */}
         <footer className="mt-12 pb-8 text-center">
           <p className="text-xs text-slate-700 font-mono">
-            AegisVault • Arbitrum Open House London 2026 • Robinhood Chain
+            Veto • Arbitrum Open House London 2026 • Robinhood Chain
           </p>
           <p className="text-[10px] text-slate-800 mt-1 italic">
-            &quot;We let the AI trade, but we let Rust do the math.&quot;
+            &quot;Your AI tried. Veto said no.&quot;
           </p>
         </footer>
       </main>

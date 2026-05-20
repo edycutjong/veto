@@ -1,5 +1,5 @@
 """
-AegisVault Price Fetcher
+Veto Price Fetcher
 Fetches historical price data from CoinGecko and formats it for on-chain consumption.
 
 In DEMO_MODE, uses hardcoded price sets instead of live API calls.

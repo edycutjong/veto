@@ -1,8 +1,8 @@
-# 🛡️ AegisVault
+# ✋ Veto
 
-**Hybrid EVM/WASM Execution Sandbox — Physically preventing AI agents from executing hallucinated trades.**
+**Your AI tried. Veto said no.**
 
-> Solidity holds the money. Rust does the math. If the math says "too volatile," the transaction reverts before any funds move.
+> A hybrid EVM/WASM execution sandbox that physically prevents AI agents from executing hallucinated trades. Solidity holds the money. Rust does the math.
 
 Built for the [Arbitrum Open House London: Online Buildathon](https://www.hackquest.io/hackathons/Arbitrum-Open-House-London-Online-Buildathon) — Deployed on **Robinhood Chain**.
 
@@ -10,15 +10,15 @@ Built for the [Arbitrum Open House London: Online Buildathon](https://www.hackqu
 
 ## ⚡ Gas Benchmark: Stylus vs Solidity
 
-> The entire point of AegisVault: proving WASM is the better math engine.
+> The entire point of Veto: proving WASM is the better math engine.
 
 | Array Size | Solidity Gas | Stylus (WASM) Gas | Savings |
 |-----------|-------------|-------------------|---------|
-| 50 items  | *TBD*       | *TBD*             | *TBD*   |
-| 100 items | *TBD*       | *TBD*             | *TBD*   |
-| 200 items | *TBD*       | *TBD*             | *TBD*   |
+| 50 items  | 142,160     | *TBD*             | *TBD*   |
+| 100 items | 211,246     | *TBD*             | *TBD*   |
+| 200 items | 349,673     | *TBD*             | *TBD*   |
 
-*Benchmarks run on Robinhood Chain Testnet. Both contracts compute identical variance over the same price arrays.*
+*Solidity benchmarks via Foundry. Stylus benchmarks to be run on Robinhood Chain Testnet.*
 
 ---
 
@@ -34,13 +34,13 @@ Autonomous AI trading agents are proliferating across DeFi. They promise hands-o
 
 ## 💡 The Solution
 
-AegisVault uses Arbitrum **Stylus (Rust)** as a **math coprocessor** — a WASM-compiled contract that computes historical asset variance on-chain, physically preventing AI agents from executing high-volatility trades.
+Veto uses Arbitrum **Stylus (Rust)** as a **math coprocessor** — a WASM-compiled contract that computes historical asset variance on-chain, physically preventing AI agents from executing high-volatility trades.
 
 ### Architecture
 
 ```
 ┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
-│   AI Agent       │────▶│  AegisVault.sol  │────▶│  RiskEngine.rs   │
+│   AI Agent       │────▶│  VetoVault.sol   │────▶│  RiskEngine.rs   │
 │   (Python)       │     │  (EVM - Funds)   │     │  (WASM - Math)   │
 │                  │     │                  │     │                  │
 │  Fetches prices  │     │  Holds ETH       │     │  Computes        │
@@ -59,7 +59,7 @@ AegisVault uses Arbitrum **Stylus (Rust)** as a **math coprocessor** — a WASM-
 |-------|-----------|
 | **Vault** | Solidity (EVM) — fund custody, access control |
 | **Risk Engine** | Rust/Stylus (WASM) — variance computation |
-| **AI Agent** | Python + LangChain — market monitoring + trade execution |
+| **AI Agent** | Python + web3.py — market monitoring + trade execution |
 | **Dashboard** | Next.js + Tailwind — cyberpunk control panel |
 | **Chain** | Robinhood Chain (Arbitrum Orbit) |
 
@@ -67,8 +67,8 @@ AegisVault uses Arbitrum **Stylus (Rust)** as a **math coprocessor** — a WASM-
 
 ```bash
 # Clone
-git clone https://github.com/edycutjong/aegisvault.git
-cd aegisvault
+git clone https://github.com/edycutjong/veto.git
+cd veto
 
 # Deploy contracts (requires cargo-stylus)
 cd contracts/stylus && cargo stylus deploy --endpoint <ROBINHOOD_RPC>
