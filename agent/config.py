@@ -17,6 +17,8 @@ VAULT_ADDRESS = os.getenv("VETO_VAULT_ADDRESS", "")
 RISK_ENGINE_ADDRESS = os.getenv("RISK_ENGINE_ADDRESS", "")
 COINGECKO_API_URL = os.getenv("COINGECKO_API_URL", "https://api.coingecko.com/api/v3")
 DEMO_MODE = os.getenv("DEMO_MODE", "true").lower() == "true"
+LOOP_INTERVAL = int(os.getenv("LOOP_INTERVAL", "0"))
+PORT = int(os.getenv("PORT", "8080"))
 
 # ─── Price Scaling ─────────────────────────────────────────────
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
-import Page from "../src/app/page";
+import Page from "../src/app/dashboard/page";
 
 describe("Dashboard Page", () => {
   beforeEach(() => {
@@ -33,6 +33,7 @@ describe("Dashboard Page", () => {
       executed: 12,
       blocked: 7,
       vaultAddress: "0x77435CF556A3705496Aa3739bD3678D9edfcB69c",
+      riskEngineAddress: "0x0a94398c550226ca01570afede89e378d81e9426",
       rpcUrl: "https://rpc.testnet.chain.robinhood.com",
     };
 
@@ -123,12 +124,12 @@ describe("Dashboard Page", () => {
     expect(screen.getByText("NO_PRICES")).toBeInTheDocument();
 
     // Verify badges
-    expect(screen.getAllByText("🚨 BLOCKED")[0]).toBeInTheDocument();
-    expect(screen.getAllByText("✅ EXECUTED")[0]).toBeInTheDocument();
-    expect(screen.getByText("⏳ PENDING")).toBeInTheDocument();
+    expect(screen.getAllByText("BLOCKED")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("EXECUTED")[0]).toBeInTheDocument();
+    expect(screen.getByText("PENDING")).toBeInTheDocument();
 
     // Verify transaction verification link
-    expect(screen.getAllByText("Verify ↗")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("Verify")[0]).toBeInTheDocument();
     expect(screen.getByText("TX: 0xhash123...")).toBeInTheDocument();
 
     // Verify Custom Error message renders
@@ -136,8 +137,8 @@ describe("Dashboard Page", () => {
 
     // Verify terminal contains agent commands and outputs
     expect(screen.getByText("$ veto-agent --mode live --monitor")).toBeInTheDocument();
-    expect(screen.getAllByText("🚨 REVERTED: VolatilityExceedsThreshold(2450, 1500)")[0]).toBeInTheDocument();
-    expect(screen.getAllByText("✅ EXECUTED: On-chain transaction executed successfully")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("[BLOCK] REVERTED: VolatilityExceedsThreshold(2450, 1500)")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("[PASS] EXECUTED: On-chain transaction executed successfully")[0]).toBeInTheDocument();
 
     mockFetch.mockRestore();
   });
@@ -190,7 +191,7 @@ describe("Dashboard Page", () => {
   it("toggles scanline shaking animation on Simulate Block click", async () => {
     render(<Page />);
 
-    const button = screen.getByText("🧪 Simulate Block");
+    const button = screen.getByText("Simulate Block");
     expect(button).toBeInTheDocument();
 
     // Click to simulate block

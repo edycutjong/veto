@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
   const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL || "https://rpc.testnet.chain.robinhood.com";
   const vaultAddress = process.env.NEXT_PUBLIC_VAULT_ADDRESS;
+  const riskEngineAddress = process.env.NEXT_PUBLIC_RISK_ENGINE_ADDRESS || "";
 
   if (!vaultAddress) {
     return NextResponse.json({
@@ -13,6 +14,7 @@ export async function GET() {
       executed: 0,
       blocked: 0,
       vaultAddress: "",
+      riskEngineAddress,
     });
   }
 
@@ -97,6 +99,7 @@ export async function GET() {
       executed,
       blocked,
       vaultAddress,
+      riskEngineAddress,
       rpcUrl,
     });
   } catch (error: unknown) {
@@ -110,6 +113,7 @@ export async function GET() {
       executed: 0,
       blocked: 0,
       vaultAddress,
+      riskEngineAddress,
     });
   }
 }

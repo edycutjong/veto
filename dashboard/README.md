@@ -72,12 +72,15 @@ NEXT_PUBLIC_RPC_URL=https://arb-sepolia.g.alchemy.com/v2/your-api-key
 # Deployed Veto Vault Solidity Contract Address
 NEXT_PUBLIC_VAULT_ADDRESS=0x77435CF556A3705496Aa3739bD3678D9edfcB69c
 
-# Deployed Stylus WASM Risk Engine Address
+# Deployed Stylus WASM Risk Engine Address (used to display the Risk Sandbox address in the console header)
 NEXT_PUBLIC_RISK_ENGINE_ADDRESS=0x0a94398c550226ca01570afede89e378d81e9426
+
+# Python Backend Agent API URL (required for live sync with the agent, falls back to static /trades.json)
+NEXT_PUBLIC_AGENT_URL=http://localhost:8000
 ```
 
 > [!NOTE]
-> If `NEXT_PUBLIC_VAULT_ADDRESS` is not set or the RPC is unreachable, the dashboard defaults to **Demo Mode**, displaying mock data and transactions so judges can interact with it immediately.
+> If `NEXT_PUBLIC_VAULT_ADDRESS` is not set or the RPC is unreachable, the dashboard defaults to **Demo Mode** for smart contract statistics. Similarly, if `NEXT_PUBLIC_AGENT_URL` is not set, the dashboard falls back to reading static trade logs from a local `trades.json` file.
 
 ---
 

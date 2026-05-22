@@ -21,8 +21,11 @@ import json
 import sys
 import time
 import traceback
+import threading
 from web3 import Web3
 from web3.exceptions import ContractLogicError
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from config import (
     RPC_URL,
@@ -30,6 +33,8 @@ from config import (
     VAULT_ADDRESS,
     VAULT_ABI,
     DEMO_MODE,
+    LOOP_INTERVAL,
+    PORT,
 )
 from price_fetcher import get_prices_for_trade
 
@@ -50,28 +55,28 @@ def calculate_variance_bps(scaled_prices: list[int]) -> int:
     return variance_bps
 
 
-def log_trade_to_json(asset: str, status: str, variance_bps: int, threshold_bps: int, value: str, prices: list, tx_hash: str = ""):
-    """Write/append a trade attempt to dashboard/public/trades.json."""
+TRADES_CACHE = []
+
+
+def init_trades_cache():
+    """Load existing trades from public/trades.json if available."""
+    global TRADES_CACHE
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    public_dir = os.path.join(base_dir, "..", "dashboard", "public")
-    
-    if not os.path.exists(public_dir):
-        os.makedirs(public_dir, exist_ok=True)
-        
-    trades_file = os.path.join(public_dir, "trades.json")
-    
-    trades = []
+    trades_file = os.path.join(base_dir, "..", "dashboard", "public", "trades.json")
     if os.path.exists(trades_file):
         try:
             with open(trades_file, "r") as f:
-                trades = json.load(f)
-        except Exception:
-            trades = []
-            
-    if tx_hash:
-        trades = [t for t in trades if t.get("txHash") != tx_hash]
-        
-    trade_id = len(trades) + 1
+                TRADES_CACHE = json.load(f)
+                print(f"  Loaded {len(TRADES_CACHE)} trades from trades.json into memory cache.")
+        except Exception as e:
+            print(f"Error loading trades.json: {e}")
+
+
+def log_trade_to_json(asset: str, status: str, variance_bps: int, threshold_bps: int, value: str, prices: list, tx_hash: str = ""):
+    """Write/append a trade attempt to dashboard/public/trades.json and memory cache."""
+    global TRADES_CACHE
+    
+    trade_id = len(TRADES_CACHE) + 1
     new_trade = {
         "id": trade_id,
         "txHash": tx_hash or f"0xmock{trade_id}",
@@ -84,15 +89,65 @@ def log_trade_to_json(asset: str, status: str, variance_bps: int, threshold_bps:
         "prices": [float(p) for p in prices]
     }
     
-    trades.append(new_trade)
-    trades = trades[-20:]
+    if tx_hash:
+        TRADES_CACHE = [t for t in TRADES_CACHE if t.get("txHash") != tx_hash]
+        
+    TRADES_CACHE.append(new_trade)
+    TRADES_CACHE = TRADES_CACHE[-20:]
+    
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    public_dir = os.path.join(base_dir, "..", "dashboard", "public")
     
     try:
+        os.makedirs(public_dir, exist_ok=True)
+        trades_file = os.path.join(public_dir, "trades.json")
+        trades = []
+        if os.path.exists(trades_file):
+            try:
+                with open(trades_file, "r") as f:
+                    trades = json.load(f)
+            except Exception:
+                trades = []
+                
+        if tx_hash:
+            trades = [t for t in trades if t.get("txHash") != tx_hash]
+            
+        trades.append(new_trade)
+        trades = trades[-20:]
+        
         with open(trades_file, "w") as f:
             json.dump(trades, f, indent=2)
         print(f"  Logged trade to dashboard/public/trades.json (hash: {new_trade['txHash'][:10]}...)")
     except Exception as e:
-        print(f"Error writing to trades.json: {e}")
+        print(f"Could not write to trades.json (filesystem may be read-only): {e}")
+
+
+# Initialize the trades cache from file
+init_trades_cache()
+
+# Create FastAPI app
+app = FastAPI(title="Veto Agent API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/api/trades")
+def get_trades():
+    """Retrieve the latest 20 trades from memory."""
+    global TRADES_CACHE
+    return TRADES_CACHE
+
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint for Railway."""
+    return {"status": "healthy", "demo_mode": DEMO_MODE, "loop_interval": LOOP_INTERVAL}
 
 
 # ─── ANSI Colors for Terminal Output ───────────────────────────
@@ -412,5 +467,35 @@ def _run_live():
     print(f"  (Note: blocked trades revert, so their state changes roll back, but they are recorded on-chain as reverted txs)")
 
 
+def agent_loop():
+    """Run the agent loop continuously."""
+    print(f"[AgentLoop] Starting agent loop with interval {LOOP_INTERVAL}s")
+    # Wait a bit before first execution to let the web server start up
+    time.sleep(2)
+    while True:
+        try:
+            print("\n" + "=" * 60)
+            print(f"[AgentLoop] Starting agent cycle at {time.strftime('%Y-%m-%d %H:%M:%S')}")
+            print("=" * 60)
+            if DEMO_MODE:
+                _run_demo_simulated()
+            else:
+                _run_live()
+            print(f"[AgentLoop] Cycle complete. Sleeping for {LOOP_INTERVAL}s...")
+        except Exception as e:
+            print(f"[AgentLoop] Error in cycle: {e}")
+            traceback.print_exc()
+        time.sleep(LOOP_INTERVAL)
+
+
 if __name__ == "__main__":  # pragma: no cover
-    run_demo()
+    if LOOP_INTERVAL > 0:
+        # Start background agent loop
+        t = threading.Thread(target=agent_loop, daemon=True)
+        t.start()
+        # Start FastAPI server
+        import uvicorn
+        print(f"Starting FastAPI API server on port {PORT}...")
+        uvicorn.run(app, host="0.0.0.0", port=PORT)
+    else:
+        run_demo()

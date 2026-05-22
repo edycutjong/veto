@@ -1,529 +1,560 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import Link from "next/link";
 
-// ─── Types ────────────────────────────────────────────────────
+// ─── Interactive Canvas Background Component ───────────────────
 
-interface TradeAttempt {
-  id: number;
-  asset: string;
-  status: "blocked" | "executed" | "pending";
-  varianceBps: number;
-  thresholdBps: number;
-  value: string;
-  timestamp: string;
-  prices: number[];
-  txHash: string;
-}
-
-interface VaultStats {
-  balance: string;
-  threshold: number;
-  executed: number;
-  blocked: number;
-  vaultAddress: string;
-  rpcUrl: string;
-  error?: string;
-}
-
-// ─── Components ───────────────────────────────────────────────
-
-function StatusBadge({ status }: { status: "blocked" | "executed" | "pending" }) {
-  const styles = {
-    blocked: "bg-red-500/10 text-red-400 border-red-500/30",
-    executed: "bg-primary/10 text-primary border-primary/30",
-    pending: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-  };
-
-  const labels = {
-    blocked: "🚨 BLOCKED",
-    executed: "✅ EXECUTED",
-    pending: "⏳ PENDING",
-  };
-
-  return (
-    <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono border ${styles[status]}`}>
-      {labels[status]}
-    </span>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  accent,
-  subtitle,
-}: {
-  label: string;
-  value: string | number;
-  accent: "primary" | "red" | "green" | "amber";
-  subtitle?: string;
-}) {
-  const accentColors = {
-    primary: "text-primary border-primary/20",
-    red: "text-red-400 border-red-500/20",
-    green: "text-primary border-primary/20",
-    amber: "text-amber-400 border-amber-500/20",
-  };
-
-  return (
-    <div className={`glass-card border-gradient p-5`}>
-      <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-1">{label}</p>
-      <p className={`text-2xl font-mono font-bold ${accentColors[accent]}`}>{value}</p>
-      {subtitle && <p className="text-xs text-slate-600 mt-1 font-mono">{subtitle}</p>}
-    </div>
-  );
-}
-
-function PriceChart({ prices, blocked }: { prices: number[]; blocked: boolean }) {
-  if (!prices || !prices.length) return null;
-
-  const min = Math.min(...prices);
-  const max = Math.max(...prices);
-  const range = max - min || 1;
-  const width = 300;
-  const height = 80;
-  const padding = 4;
-
-  const points = prices
-    .map((p, i) => {
-      const x = padding + (i / (prices.length - 1)) * (width - padding * 2);
-      const y = height - padding - ((p - min) / range) * (height - padding * 2);
-      return `${x},${y}`;
-    })
-    .join(" ");
-
-  const color = blocked ? "#ef4444" : "#00C805";
-  const glowColor = blocked ? "rgba(239,68,68,0.3)" : "rgba(0,200,5,0.3)";
-
-  return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-20" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id={`grad-${blocked}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
-          <stop offset="100%" stopColor={color} stopOpacity="0.02" />
-        </linearGradient>
-        <filter id={`glow-${blocked}`}>
-          <feGaussianBlur stdDeviation="2" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-      {/* Area fill */}
-      <polygon
-        points={`${padding},${height - padding} ${points} ${width - padding},${height - padding}`}
-        fill={`url(#grad-${blocked})`}
-      />
-      {/* Line */}
-      <polyline
-        points={points}
-        fill="none"
-        stroke={color}
-        strokeWidth="1.5"
-        filter={`url(#glow-${blocked})`}
-      />
-      {/* Threshold line */}
-      <line
-        x1={padding}
-        y1={height / 2}
-        x2={width - padding}
-        y2={height / 2}
-        stroke={glowColor}
-        strokeWidth="0.5"
-        strokeDasharray="4,4"
-      />
-    </svg>
-  );
-}
-
-function TradeRow({ trade }: { trade: TradeAttempt }) {
-  const isBlocked = trade.status === "blocked";
-  const rowClass = isBlocked ? "border-red-500/20 hover:border-red-500/40" : "border-primary/20 hover:border-primary/40";
-
-  return (
-    <div className={`glass-card p-4 mb-3 border ${rowClass} transition-all ${isBlocked ? "flash-red" : ""}`}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <span className="text-base font-mono font-bold text-slate-200">{trade.asset}</span>
-          <StatusBadge status={trade.status} />
-        </div>
-        <span className="text-xs text-slate-500 font-mono">
-          {new Date(trade.timestamp).toLocaleTimeString()}
-        </span>
-      </div>
-
-      <PriceChart prices={trade.prices} blocked={isBlocked} />
-
-      <div className="grid grid-cols-3 gap-3 mt-3">
-        <div>
-          <p className="text-[10px] text-slate-600 uppercase">Variance</p>
-          <p className={`text-sm font-mono font-semibold ${isBlocked ? "text-red-400" : "text-primary"}`}>
-            {trade.varianceBps.toLocaleString()} bps
-          </p>
-        </div>
-        <div>
-          <p className="text-[10px] text-slate-600 uppercase">Threshold</p>
-          <p className="text-sm font-mono text-slate-400">{trade.thresholdBps} bps</p>
-        </div>
-        <div>
-          <p className="text-[10px] text-slate-600 uppercase">Value</p>
-          <p className="text-sm font-mono text-slate-300">{trade.value}</p>
-        </div>
-      </div>
-
-      {isBlocked && (
-        <div className="mt-3 p-2 rounded-lg bg-red-500/5 border border-red-500/20">
-          <p className="text-[11px] font-mono text-red-400 break-all">
-            <span className="text-red-500 font-bold">Custom Error:</span>{" "}
-            VolatilityExceedsThreshold({trade.varianceBps}, {trade.thresholdBps})
-          </p>
-        </div>
-      )}
-
-      {trade.txHash && (
-        <div className="mt-2 text-[10px] font-mono text-slate-600 flex items-center justify-between border-t border-slate-900 pt-2">
-          <span>TX: {trade.txHash.slice(0, 18)}...</span>
-          <a
-            href={`https://sepolia.arbiscan.io/tx/${trade.txHash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline"
-          >
-            Verify ↗
-          </a>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function AgentTerminal({ trades }: { trades: TradeAttempt[] }) {
-  const terminalLines: Array<{ text: string; type: "cmd" | "info" | "warn" | "error" | "success" }> = [
-    { text: "$ veto-agent --mode live --monitor", type: "cmd" },
-    { text: "[Agent] Connected to RPC. Synchronizing contract states...", type: "info" },
-  ];
-
-  trades.forEach((trade) => {
-    if (trade.status === "blocked") {
-      terminalLines.push(
-        { text: `[Agent] Market anomaly detected: ${trade.asset} shows high-yield activity`, type: "warn" },
-        { text: `[Agent] Decision: Attempting token swap for ${trade.asset}`, type: "warn" },
-        { text: `[Agent] Fetched ${trade.prices.length} prices. Sending trade proposal transaction...`, type: "info" },
-        { text: `[RiskEngine] Variance computed: ${trade.varianceBps} bps. Limit: ${trade.thresholdBps} bps`, type: "info" },
-        { text: `🚨 REVERTED: VolatilityExceedsThreshold(${trade.varianceBps}, ${trade.thresholdBps})`, type: "error" },
-        { text: `[RiskEngine] Trade BLOCKED. Transaction hash: ${trade.txHash}`, type: "error" }
-      );
-    } else {
-      terminalLines.push(
-        { text: `[Agent] Consistent yield opportunity: Staking ${trade.asset}`, type: "info" },
-        { text: `[Agent] Decision: Allocate capital to staking vault`, type: "info" },
-        { text: `[Agent] Fetched ${trade.prices.length} prices. Sending trade execution...`, type: "info" },
-        { text: `[RiskEngine] Variance computed: ${trade.varianceBps} bps. Limit: ${trade.thresholdBps} bps`, type: "info" },
-        { text: `✅ EXECUTED: On-chain transaction executed successfully`, type: "success" },
-        { text: `[RiskEngine] Trade APPROVED. Transaction hash: ${trade.txHash}`, type: "success" }
-      );
-    }
-  });
-
-  const typeColors = {
-    cmd: "text-primary",
-    info: "text-slate-500",
-    warn: "text-amber-400",
-    error: "text-red-400",
-    success: "text-primary",
-  };
-
-  return (
-    <div className="glass-card p-4 h-full">
-      <div className="flex items-center gap-2 mb-3 pb-3 border-b border-slate-800">
-        <div className="flex gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-red-500/80" />
-          <div className="w-3 h-3 rounded-full bg-amber-500/80" />
-          <div className="w-3 h-3 rounded-full bg-primary/80" />
-        </div>
-        <span className="text-xs text-slate-600 font-mono ml-2">agent@veto ~ python agent.py</span>
-      </div>
-      <div className="space-y-1 overflow-y-auto max-h-[500px] h-[450px]">
-        {terminalLines.map((line, i) => (
-          <p key={i} className={`text-xs font-mono leading-relaxed ${typeColors[line.type]}`}>
-            {line.text}
-          </p>
-        ))}
-        <p className="text-xs font-mono text-primary animate-pulse mt-2">▌</p>
-      </div>
-    </div>
-  );
-}
-
-// ─── Main Page ────────────────────────────────────────────────
-
-export default function Dashboard() {
-  const [shaking, setShaking] = useState(false);
-  const [trades, setTrades] = useState<TradeAttempt[]>([]);
-  const [vaultStats, setVaultStats] = useState<VaultStats>({
-    balance: "0.0000",
-    threshold: 1000,
-    executed: 0,
-    blocked: 0,
-    vaultAddress: "",
-    rpcUrl: "",
-  });
-
-  const fetchVaultData = useCallback(async () => {
-    try {
-      const res = await fetch("/api/vault");
-      if (res.ok) {
-        const data = await res.json();
-        setVaultStats(data);
-      }
-    } catch (e) {
-      console.error("Failed to fetch vault statistics:", e);
-    }
-  }, []);
-
-  const fetchTradesData = useCallback(async () => {
-    try {
-      const res = await fetch("/trades.json");
-      if (res.ok) {
-        const data = await res.json();
-        // Sort trades by timestamp descending
-        const sorted = [...data].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-        setTrades(sorted);
-      }
-    } catch (e) {
-      console.error("Failed to fetch trades log:", e);
-    }
-  }, []);
+function CanvasBackground() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const mouseRef = useRef({ x: 0, y: 0, active: false });
 
   useEffect(() => {
-    // Initial fetch
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchVaultData();
-    fetchTradesData();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-    // Set intervals
-    const statsInterval = setInterval(fetchVaultData, 5000);
-    const tradesInterval = setInterval(fetchTradesData, 5000);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animationFrameId: number;
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    const handleResize = () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+    window.addEventListener("resize", handleResize);
+
+    // Particle class
+    class Particle {
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      radius: number;
+
+      constructor() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.vx = (Math.random() - 0.5) * 0.3;
+        this.vy = (Math.random() - 0.5) * 0.3;
+        this.radius = Math.random() * 1.5 + 0.5;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < 0 || this.x > width) this.vx = -this.vx;
+        if (this.y < 0 || this.y > height) this.vy = -this.vy;
+      }
+
+      draw(c: CanvasRenderingContext2D) {
+        c.beginPath();
+        c.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        c.fillStyle = "rgba(0, 200, 5, 0.4)";
+        c.fill();
+      }
+    }
+
+    const particlesCount = Math.min(Math.floor((width * height) / 12000), 100);
+    const particles: Particle[] = [];
+    for (let i = 0; i < particlesCount; i++) {
+      particles.push(new Particle());
+    }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseRef.current.x = e.clientX;
+      mouseRef.current.y = e.clientY;
+      mouseRef.current.active = true;
+    };
+
+    const handleMouseLeave = () => {
+      mouseRef.current.active = false;
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    document.body.addEventListener("mouseleave", handleMouseLeave);
+
+    const drawGrid = (c: CanvasRenderingContext2D) => {
+      c.strokeStyle = "rgba(0, 200, 5, 0.02)";
+      c.lineWidth = 0.5;
+      const gridSize = 40;
+      for (let x = 0; x < width; x += gridSize) {
+        c.beginPath();
+        c.moveTo(x, 0);
+        c.lineTo(x, height);
+        c.stroke();
+      }
+      for (let y = 0; y < height; y += gridSize) {
+        c.beginPath();
+        c.moveTo(0, y);
+        c.lineTo(width, y);
+        c.stroke();
+      }
+    };
+
+    // Animation Loop
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      // Draw background cybernetic grid
+      drawGrid(ctx);
+
+      // Update & Draw Particles
+      particles.forEach((p) => {
+        p.update();
+        p.draw(ctx);
+      });
+
+      // Draw connections
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 120) {
+            const alpha = (1 - dist / 120) * 0.15;
+            ctx.strokeStyle = `rgba(0, 200, 5, ${alpha})`;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.stroke();
+          }
+        }
+
+        // Connect to mouse
+        if (mouseRef.current.active) {
+          const mdx = particles[i].x - mouseRef.current.x;
+          const mdy = particles[i].y - mouseRef.current.y;
+          const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
+
+          if (mdist < 180) {
+            const malpha = (1 - mdist / 180) * 0.25;
+            ctx.strokeStyle = `rgba(0, 200, 5, ${malpha})`;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(mouseRef.current.x, mouseRef.current.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
 
     return () => {
-      clearInterval(statsInterval);
-      clearInterval(tradesInterval);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("mousemove", handleMouseMove);
+      document.body.removeEventListener("mouseleave", handleMouseLeave);
+      cancelAnimationFrame(animationFrameId);
     };
-  }, [fetchVaultData, fetchTradesData]);
-
-  const handleSimulateBlock = useCallback(() => {
-    setShaking(true);
-    setTimeout(() => setShaking(false), 500);
   }, []);
 
-  const blockedCount = trades.filter((t) => t.status === "blocked").length;
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 pointer-events-none z-0"
+    />
+  );
+}
+
+// ─── Main Landing Page Component ────────────────────────────────
+
+export default function LandingPage() {
+  const [selectedAsset, setSelectedAsset] = useState<"RUGCOIN" | "ETH">("RUGCOIN");
+  const [simState, setSimState] = useState<"idle" | "sending" | "evaluating" | "result">("idle");
+  const [simResult, setSimResult] = useState<"blocked" | "executed" | null>(null);
+  const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
+  const simInterval = useRef<NodeJS.Timeout | null>(null);
+
+  const startSimulation = useCallback(() => {
+    if (simInterval.current) clearInterval(simInterval.current);
+    setSimState("sending");
+    setSimResult(null);
+    setTerminalLogs([`$ veto-agent --mode dry-run --test-asset ${selectedAsset}`]);
+
+    const steps = [
+      {
+        delay: 600,
+        action: () => {
+          setTerminalLogs((prev) => [
+            ...prev,
+            `[Agent] Opportunity detected for ${selectedAsset}`,
+            `[Agent] Initializing trade execution payload...`,
+          ]);
+        },
+      },
+      {
+        delay: 1400,
+        action: () => {
+          setSimState("evaluating");
+          setTerminalLogs((prev) => [
+            ...prev,
+            `[Veto] Transaction intercepted by WASM Risk Sandbox`,
+            `[RiskEngine] Pulling price array from optimistic payload...`,
+            `[RiskEngine] Performing O(N) variance calculations in Stylus WASM`,
+          ]);
+        },
+      },
+      {
+        delay: 2400,
+        action: () => {
+          setSimState("result");
+          if (selectedAsset === "RUGCOIN") {
+            setSimResult("blocked");
+            setTerminalLogs((prev) => [
+              ...prev,
+              `[RiskEngine] Computed variance: 2,450 BPS (limit: 1,000 BPS)`,
+              `[RiskEngine] RISK DETECTED: Volatility exceeds absolute safety limits`,
+              `[BLOCK] REVERTED: VolatilityExceedsThreshold(2450, 1000)`,
+              `[Veto] Transaction rejected on-chain. Capital remains in Solidity Vault.`,
+            ]);
+          } else {
+            setSimResult("executed");
+            setTerminalLogs((prev) => [
+              ...prev,
+              `[RiskEngine] Computed variance: 120 BPS (limit: 1,000 BPS)`,
+              `[RiskEngine] RISK VERIFIED: Variance is within safe parameters`,
+              `[PASS] APPROVED: Forwarding execution call to Vault`,
+              `[Vault] Swap executed successfully. TX: 0x8dfb2...ce32`,
+            ]);
+          }
+        },
+      },
+    ];
+
+    steps.forEach((step) => {
+      setTimeout(step.action, step.delay);
+    });
+  }, [selectedAsset]);
 
   return (
-    <div className={`scanline min-h-screen ${shaking ? "shake" : ""}`}>
-      {/* Header */}
-      <header className="border-b border-slate-800/50 bg-slate-950/80 backdrop-blur-xl sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center text-lg font-bold shadow-lg shadow-primary/20">
-              🛡️
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight">
-                <span className="text-primary">Ve</span>
-                <span className="text-slate-300">to</span>
-                <span className="text-slate-600 text-sm ml-2 font-normal">✋</span>
-              </h1>
-              <p className="text-[10px] text-slate-600 uppercase tracking-widest">WASM Risk Engine • Robinhood Chain</p>
-            </div>
+    <div className="relative min-h-screen flex flex-col justify-between overflow-x-hidden select-none font-sans bg-slate-950">
+      <CanvasBackground />
+
+      {/* Top Navigation */}
+      <header className="relative z-10 max-w-7xl mx-auto w-full px-6 py-6 flex items-center justify-between border-b border-slate-900/40 bg-slate-950/20 backdrop-blur-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/20">
+            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
           </div>
-          <div className="flex flex-col items-end gap-1">
-            <div className="flex items-center gap-2">
-              <span className="status-dot status-dot-live" />
-              <span className="text-xs text-primary font-mono font-bold">CONNECTED LIVE</span>
-            </div>
-            {vaultStats.vaultAddress && (
-              <span className="text-[10px] text-slate-500 font-mono">
-                Vault: {vaultStats.vaultAddress.slice(0, 6)}...{vaultStats.vaultAddress.slice(-4)}
-              </span>
-            )}
+          <div>
+            <span className="font-display text-lg font-bold tracking-wider text-slate-100">
+              VE<span className="text-primary">TO</span>
+            </span>
+            <span className="ml-2 px-1.5 py-0.2 rounded text-[7px] font-bold bg-primary/10 text-primary border border-primary/20 tracking-widest uppercase">ACTIVE</span>
           </div>
         </div>
+
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg border border-primary/30 text-primary text-xs font-mono font-bold bg-primary/5 hover:bg-primary/15 transition-all shadow-md shadow-primary/5"
+        >
+          Enter Console
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatCard
-            label="Vault Balance"
-            value={`${vaultStats.balance} ETH`}
-            accent="primary"
-            subtitle="Live RPC State"
-          />
-          <StatCard
-            label="Trades Executed"
-            value={vaultStats.executed}
-            accent="green"
-            subtitle="Within threshold"
-          />
-          <StatCard
-            label="Trades Blocked"
-            value={blockedCount}
-            accent="red"
-            subtitle="Variance exceeded"
-          />
-          <StatCard
-            label="Funds Saved"
-            value={`${(blockedCount * 2.0).toFixed(1)} ETH`}
-            accent="amber"
-            subtitle="Est. Volatility Saved"
-          />
-        </div>
+      {/* Main Content */}
+      <main className="relative z-10 max-w-7xl mx-auto w-full px-6 py-12 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        {/* Left Side: Headline & Copy */}
+        <section className="lg:col-span-6 flex flex-col items-start text-left animate-fade-in-up">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/60 border border-slate-800 mb-6">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-[10px] text-slate-400 font-mono tracking-wider uppercase">WASM math coprocessor sandbox</span>
+          </div>
 
-        {/* Threshold Control */}
-        <div className="glass-card border-gradient p-5 mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h2 className="text-sm font-semibold text-slate-300">Human Control Panel</h2>
-              <p className="text-xs text-slate-600">On-chain Maximum Acceptable Asset Variance (BPS)</p>
-            </div>
-            <button
-              onClick={handleSimulateBlock}
-              className="px-4 py-2 text-xs font-mono rounded-lg bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 transition-colors"
+          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] mb-6">
+            <span className="text-slate-500 block text-2xl sm:text-3xl font-medium tracking-normal mb-1">Your AI Agent Tried.</span>
+            <span className="bg-gradient-to-r from-red-500 via-primary to-emerald-400 bg-clip-text text-transparent filter drop-shadow-[0_0_15px_rgba(0,200,5,0.15)] font-extrabold">
+              Veto Said No.
+            </span>
+          </h1>
+
+          <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-8 max-w-lg">
+            Veto is a hybrid EVM/WASM execution sandbox on Robinhood Chain that uses Arbitrum Stylus as an on-chain math coprocessor to compute historical asset variance in real time, physically preventing autonomous trading agents from executing volatile, hallucinated transactions.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+            <Link
+              href="/dashboard"
+              className="relative group overflow-hidden inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-primary text-slate-950 font-display font-bold text-sm hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02] cursor-pointer"
             >
-              🧪 Simulate Block
+              <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+              Launch Security Console
+              <svg className="w-4 h-4 text-slate-950" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </Link>
+            
+            <a
+              href="#sandbox"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl border border-slate-800 text-slate-300 font-display font-bold text-sm bg-slate-900/30 hover:bg-slate-900/60 hover:text-white transition-all"
+            >
+              Test Risk Sandbox
+              <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 13l-7 7-7-7m14-6l-7 7-7-7" />
+              </svg>
+            </a>
+          </div>
+
+          {/* Quick Metrics */}
+          <div className="grid grid-cols-3 gap-6 border-t border-slate-900/80 pt-8 mt-12 w-full">
+            <div>
+              <p className="text-xl sm:text-2xl font-mono font-bold text-slate-200">&lt; 15ms</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">Evaluation Latency</p>
+            </div>
+            <div>
+              <p className="text-xl sm:text-2xl font-mono font-bold text-primary">~90%</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">Gas Reduction</p>
+            </div>
+            <div>
+              <p className="text-xl sm:text-2xl font-mono font-bold text-red-400">Zero</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider">Hallucinated Trades</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Right Side: Interactive Sandbox Simulator */}
+        <section id="sandbox" className="lg:col-span-6 flex flex-col animate-fade-in-up delay-200">
+          <div className="glass-card border-gradient p-6 relative overflow-hidden">
+            
+            {/* Control Header */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-800/80">
+              <div>
+                <h3 className="font-display font-bold text-sm text-slate-200">VETO WASM COPROCESSOR SANDBOX</h3>
+                <p className="text-[11px] text-slate-500 font-mono">Test execution safety of simulated agent trades</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSelectedAsset("RUGCOIN")}
+                  className={`px-3 py-1 text-xs font-mono rounded border ${
+                    selectedAsset === "RUGCOIN"
+                      ? "bg-red-500/10 text-red-400 border-red-500/40"
+                      : "bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-300"
+                  } transition-colors cursor-pointer`}
+                >
+                  RugCoin (Volatile)
+                </button>
+                <button
+                  onClick={() => setSelectedAsset("ETH")}
+                  className={`px-3 py-1 text-xs font-mono rounded border ${
+                    selectedAsset === "ETH"
+                      ? "bg-primary/10 text-primary border-primary/40"
+                      : "bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-300"
+                  } transition-colors cursor-pointer`}
+                >
+                  ETH (Stable)
+                </button>
+              </div>
+            </div>
+
+            {/* Visual Flow Animation */}
+            <div className="h-40 bg-slate-950/60 border border-slate-900 rounded-xl p-4 flex items-center justify-between relative mb-6">
+              
+              {/* Left Node: Agent */}
+              <div className="flex flex-col items-center z-10 w-24">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center border transition-all ${
+                  simState === "sending" ? "border-amber-500/50 bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.15)]" : "border-slate-800 bg-slate-900"
+                }`}>
+                  <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <span className="text-[10px] font-mono mt-2 text-slate-500 uppercase">Trading Agent</span>
+              </div>
+
+              {/* Connecting Pathway */}
+              <div className="flex-grow h-1 bg-slate-900 mx-2 relative overflow-hidden">
+                {simState === "sending" && (
+                  <div className="absolute top-0 h-full w-4 bg-amber-400/80 rounded blur-xs animate-path-flow" />
+                )}
+                {simState === "evaluating" && (
+                  <div className="absolute top-0 h-full w-full bg-gradient-to-r from-amber-400 via-primary to-primary animate-pulse" />
+                )}
+                {simState === "result" && (
+                  <div className={`absolute top-0 h-full w-full ${simResult === "blocked" ? "bg-red-500/40" : "bg-primary/40"}`} />
+                )}
+              </div>
+
+              {/* Middle Node: Veto Shield */}
+              <div className="flex flex-col items-center z-10 w-28">
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center border transition-all ${
+                  simState === "evaluating"
+                    ? "border-primary/50 bg-primary/10 shadow-[0_0_20px_rgba(0,200,5,0.2)]"
+                    : simState === "result"
+                    ? simResult === "blocked"
+                      ? "border-red-500/50 bg-red-500/10 shadow-[0_0_25px_rgba(239,68,68,0.25)]"
+                      : "border-primary/50 bg-primary/10 shadow-[0_0_25px_rgba(0,200,5,0.25)]"
+                    : "border-slate-800 bg-slate-900"
+                }`}>
+                  {simState === "evaluating" ? (
+                    <svg className="w-7 h-7 text-primary animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  ) : simResult === "blocked" ? (
+                    <svg className="w-8 h-8 text-red-500 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  ) : simResult === "executed" ? (
+                    <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-7 h-7 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  )}
+                </div>
+                <span className="text-[10px] font-mono mt-2 text-slate-500 uppercase">WASM Risk Guard</span>
+              </div>
+
+              {/* Connecting Pathway */}
+              <div className="flex-grow h-1 bg-slate-900 mx-2 relative overflow-hidden">
+                {simState === "result" && simResult === "executed" && (
+                  <div className="absolute top-0 h-full w-full bg-primary/40" />
+                )}
+              </div>
+
+              {/* Right Node: Vault */}
+              <div className="flex flex-col items-center z-10 w-24">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center border transition-all ${
+                  simResult === "executed" ? "border-primary/50 bg-primary/10 shadow-[0_0_15px_rgba(0,200,5,0.15)]" : "border-slate-800 bg-slate-900"
+                }`}>
+                  <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                </div>
+                <span className="text-[10px] font-mono mt-2 text-slate-500 uppercase">Solidity Vault</span>
+              </div>
+            </div>
+
+            {/* Run Button */}
+            <button
+              onClick={startSimulation}
+              disabled={simState === "sending" || simState === "evaluating"}
+              className="w-full py-3 mb-6 font-display text-sm font-bold tracking-wider rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed uppercase"
+            >
+              <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Run Execution Safety dry-run
             </button>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex-1 h-1.5 rounded-full bg-slate-800 relative">
-              <div
-                className="absolute h-full rounded-full bg-primary"
-                style={{ width: `${(vaultStats.threshold / 5000) * 100}%` }}
-              />
-            </div>
-            <div className="text-right min-w-[120px]">
-              <span className="text-xl font-mono font-bold text-primary">{vaultStats.threshold}</span>
-              <span className="text-xs text-slate-600 ml-1">bps</span>
-              <p className="text-[10px] text-slate-600">{(vaultStats.threshold / 100).toFixed(1)}% max variance</p>
-            </div>
-          </div>
-        </div>
 
-        {/* Split View: Trade History + Agent Terminal */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left: Trade History */}
-          <div>
-            <h2 className="text-sm font-semibold text-slate-400 mb-4 uppercase tracking-wider flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-primary" />
-              Trade Execution Log
-            </h2>
-            {trades.length === 0 ? (
-              <p className="text-sm text-slate-600 italic font-mono p-4">Waiting for agent trade proposals...</p>
-            ) : (
-              trades.map((trade) => <TradeRow key={trade.id} trade={trade} />)
-            )}
-          </div>
+            {/* Sandbox Console Output */}
+            <div className="h-44 bg-slate-950 border border-slate-900 rounded-xl p-4 font-mono text-[11px] overflow-y-auto leading-relaxed flex flex-col justify-start">
+              {terminalLogs.length === 0 ? (
+                <span className="text-slate-600 italic">Select asset parameters and run dry-run to print logs...</span>
+              ) : (
+                terminalLogs.map((log, index) => {
+                  let colorClass = "text-slate-400";
+                  if (log.startsWith("$")) colorClass = "text-primary";
+                  else if (log.includes("[BLOCK]") || log.includes("RISK DETECTED")) colorClass = "text-red-400";
+                  else if (log.includes("[PASS]") || log.includes("Vault")) colorClass = "text-primary";
+                  else if (log.includes("[Agent]")) colorClass = "text-slate-500";
+                  else if (log.includes("[Veto]")) colorClass = "text-slate-300";
+                  else if (log.includes("[WASM]")) colorClass = "text-primary font-semibold";
 
-          {/* Right: Agent Terminal */}
-          <div>
-            <h2 className="text-sm font-semibold text-slate-400 mb-4 uppercase tracking-wider flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-primary pulse-glow" />
-              Agent Execution Terminal
-            </h2>
-            <AgentTerminal trades={trades} />
-          </div>
-        </div>
-
-        {/* Architecture Diagram */}
-        <div className="glass-card border-gradient p-6 mt-8">
-          <h2 className="text-sm font-semibold text-slate-400 mb-4 uppercase tracking-wider">Architecture</h2>
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 text-center">
-            <div className="glass-card p-4 min-w-[160px]">
-              <p className="text-xs text-slate-600 uppercase mb-1">AI Agent</p>
-              <p className="text-sm font-mono text-amber-400">Python</p>
-              <p className="text-[10px] text-slate-600 mt-1">Fetches prices</p>
-              <p className="text-[10px] text-slate-600">Signs transactions</p>
-            </div>
-            <span className="text-primary text-xl">→</span>
-            <div className="glass-card p-4 min-w-[160px] border-primary/30">
-              <p className="text-xs text-slate-600 uppercase mb-1">Vault</p>
-              <p className="text-sm font-mono text-primary">Solidity (EVM)</p>
-              <p className="text-[10px] text-slate-600 mt-1">Holds funds</p>
-              <p className="text-[10px] text-slate-600">Access control</p>
-            </div>
-            <span className="text-primary text-xl">→</span>
-            <div className="glass-card p-4 min-w-[160px] glow-primary border-primary/20">
-              <p className="text-xs text-slate-600 uppercase mb-1">Risk Engine</p>
-              <p className="text-sm font-mono text-primary font-bold">Rust / Stylus</p>
-              <p className="text-[10px] text-slate-600 mt-1">WASM math</p>
-              <p className="text-[10px] text-slate-600">Variance computation</p>
-            </div>
-            <span className="text-2xl">→</span>
-            <div className="flex flex-col gap-2">
-              <div className="glass-card p-3 border-primary/30">
-                <p className="text-xs font-mono text-primary">✅ PASS → Execute</p>
-              </div>
-              <div className="glass-card p-3 border-red-500/30">
-                <p className="text-xs font-mono text-red-400">❌ FAIL → Revert</p>
-              </div>
+                  return (
+                    <div key={index} className={colorClass}>
+                      {log}
+                    </div>
+                  );
+                })
+              )}
+              {(simState === "sending" || simState === "evaluating") && (
+                <span className="text-primary animate-pulse mt-1">▌ Processing execution...</span>
+              )}
             </div>
           </div>
-        </div>
-
-        {/* Gas Benchmark */}
-        <div className="glass-card border-gradient p-6 mt-6">
-          <h2 className="text-sm font-semibold text-slate-400 mb-4 uppercase tracking-wider">
-            Gas Benchmark — Stylus vs Solidity
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm font-mono">
-              <thead>
-                <tr className="border-b border-slate-800">
-                  <th className="text-left py-2 px-3 text-xs text-slate-600 uppercase">Array Size</th>
-                  <th className="text-right py-2 px-3 text-xs text-slate-600 uppercase">Solidity (EVM)</th>
-                  <th className="text-right py-2 px-3 text-xs text-slate-600 uppercase">Stylus (WASM)</th>
-                  <th className="text-right py-2 px-3 text-xs text-slate-600 uppercase">Savings</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors">
-                  <td className="py-2.5 px-3 text-slate-400">50 prices</td>
-                  <td className="py-2.5 px-3 text-right text-red-400">142,160 gas</td>
-                  <td className="py-2.5 px-3 text-right text-primary">~14,200 gas</td>
-                  <td className="py-2.5 px-3 text-right text-primary">~90%</td>
-                </tr>
-                <tr className="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors">
-                  <td className="py-2.5 px-3 text-slate-400">100 prices</td>
-                  <td className="py-2.5 px-3 text-right text-red-400">211,246 gas</td>
-                  <td className="py-2.5 px-3 text-right text-primary">~21,100 gas</td>
-                  <td className="py-2.5 px-3 text-right text-primary">~90%</td>
-                </tr>
-                <tr className="hover:bg-slate-800/20 transition-colors">
-                  <td className="py-2.5 px-3 text-slate-400">200 prices</td>
-                  <td className="py-2.5 px-3 text-right text-red-400">349,673 gas</td>
-                  <td className="py-2.5 px-3 text-right text-primary">~35,000 gas</td>
-                  <td className="py-2.5 px-3 text-right text-primary">~90%</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p className="text-[10px] text-slate-600 mt-3">
-            Solidity gas measured via Foundry. Stylus estimates based on documented 10× compute savings.
-            Final WASM benchmarks will be run on Robinhood Chain testnet.
-          </p>
-        </div>
-
-        {/* Footer */}
-        <footer className="mt-12 pb-8 text-center">
-          <p className="text-xs text-slate-700 font-mono">
-            Veto • Arbitrum Open House London 2026 • Robinhood Chain
-          </p>
-          <p className="text-[10px] text-slate-800 mt-1 italic">
-            &quot;Your AI tried. Veto said no.&quot;
-          </p>
-        </footer>
+        </section>
       </main>
+
+      {/* Features Section */}
+      <section className="relative z-10 max-w-7xl mx-auto w-full px-6 py-16 border-t border-slate-900/60">
+        <h2 className="font-display text-xl font-bold tracking-widest text-slate-400 mb-12 uppercase text-center">
+          SYSTEM HIGHLIGHTS & ARCHITECTURE
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* Card 1 */}
+          <div className="glass-card p-6 border-gradient">
+            <div className="w-10 h-10 rounded-lg bg-primary/5 border border-primary/20 flex items-center justify-center text-primary mb-4">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
+            </div>
+            <h3 className="font-display font-bold text-slate-200 text-sm uppercase mb-2">Stylus Math Coprocessing</h3>
+            <p className="text-xs text-slate-400 leading-relaxed font-sans">
+              Decouple computation from EVM. Historical variance and complex statistics are computed on-chain using high-performance compiled Rust WASM bytecodes, saving substantial gas.
+            </p>
+          </div>
+
+          {/* Card 2 */}
+          <div className="glass-card p-6 border-gradient">
+            <div className="w-10 h-10 rounded-lg bg-red-500/5 border border-red-500/20 flex items-center justify-center text-red-400 mb-4">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h3 className="font-display font-bold text-slate-200 text-sm uppercase mb-2">Zero-Trust Interception</h3>
+            <p className="text-xs text-slate-400 leading-relaxed font-sans">
+              Keep the vault keys safe. Even if trading agents are fully compromised or hallucinate high-risk executions, Veto enforces boundary thresholds at the consensus layer, resulting in O(1) gas reverts.
+            </p>
+          </div>
+
+          {/* Card 3 */}
+          <div className="glass-card p-6 border-gradient">
+            <div className="w-10 h-10 rounded-lg bg-amber-500/5 border border-amber-500/20 flex items-center justify-center text-amber-400 mb-4">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+              </svg>
+            </div>
+            <h3 className="font-display font-bold text-slate-200 text-sm uppercase mb-2">Calldata Optimistic Oracles</h3>
+            <p className="text-xs text-slate-400 leading-relaxed font-sans">
+              Eliminate dependency on slow on-chain pricing feeds. The trading agent proposes prices as transaction input calldata, and Veto validates the volatility on-chain, preventing manipulation via sub-second math checks.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-slate-900/60 py-8 text-center bg-slate-950/40 backdrop-blur-sm">
+        <p className="text-xs text-slate-600 font-mono">
+          Veto &bull; Arbitrum Open House London 2026 &bull; Robinhood Chain
+        </p>
+        <p className="text-[10px] text-slate-700 font-mono mt-1 italic uppercase tracking-wider">
+          Your AI tried. Veto said no.
+        </p>
+      </footer>
+
+      {/* Style overrides for custom animations */}
+      <style jsx global>{`
+        @keyframes pathFlow {
+          0% {
+            left: -20%;
+          }
+          100% {
+            left: 120%;
+          }
+        }
+        .animate-path-flow {
+          animation: pathFlow 1s linear infinite;
+        }
+      `}</style>
     </div>
   );
 }
