@@ -59,3 +59,32 @@ def test_get_prices_for_trade_live():
         assert meta["min"] == 100.0
         assert meta["max"] == 300.0
         mock_fetch.assert_called_once_with(coin_id="bitcoin")
+
+
+def test_fetch_live_prices_downsampling():
+    with patch("price_fetcher.requests.get") as mock_get:
+        mock_response = MagicMock()
+        # Generate 200 dummy prices
+        dummy_prices = [[i * 1000, float(i)] for i in range(200)]
+        mock_response.json.return_value = {
+            "prices": dummy_prices
+        }
+        mock_get.return_value = mock_response
+
+        # Request 100 points
+        prices = fetch_live_prices("ethereum", days=1, num_points=100)
+        assert len(prices) == 100
+        # verify downsampling by checking step size
+        assert prices[0] == 0.0
+        assert prices[1] == 2.0  # step = 200 // 100 = 2
+        assert prices[99] == 198.0
+
+
+def test_fetch_live_prices_volatile_fallback():
+    with patch("price_fetcher.requests.get") as mock_get:
+        mock_get.side_effect = requests.RequestException("API error")
+        
+        # Shitcoin/volatile coin ID fallback
+        prices = fetch_live_prices("shitcoin")
+        assert prices == DEMO_VOLATILE_PRICES_USD
+

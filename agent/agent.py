@@ -16,6 +16,7 @@ Usage:
     DEMO_MODE=false python agent.py     # Live mode (CoinGecko + real chain)
 """
 
+import os
 import json
 import sys
 import time
@@ -31,6 +32,67 @@ from config import (
     DEMO_MODE,
 )
 from price_fetcher import get_prices_for_trade
+
+
+def calculate_variance_bps(scaled_prices: list[int]) -> int:
+    """Calculate variance in basis points using pure integer math, mirroring RiskEngine.rs."""
+    n = len(scaled_prices)
+    if n < 2:
+        return 0
+    mean = sum(scaled_prices) // n
+    if mean == 0:
+        return 0
+    sum_sq_dev = sum((p - mean) ** 2 for p in scaled_prices)
+    variance = sum_sq_dev // n
+    scale = 100_000_000
+    mean_sq = mean * mean
+    variance_bps = (variance * scale) // mean_sq
+    return variance_bps
+
+
+def log_trade_to_json(asset: str, status: str, variance_bps: int, threshold_bps: int, value: str, prices: list, tx_hash: str = ""):
+    """Write/append a trade attempt to dashboard/public/trades.json."""
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    public_dir = os.path.join(base_dir, "..", "dashboard", "public")
+    
+    if not os.path.exists(public_dir):
+        os.makedirs(public_dir, exist_ok=True)
+        
+    trades_file = os.path.join(public_dir, "trades.json")
+    
+    trades = []
+    if os.path.exists(trades_file):
+        try:
+            with open(trades_file, "r") as f:
+                trades = json.load(f)
+        except Exception:
+            trades = []
+            
+    if tx_hash:
+        trades = [t for t in trades if t.get("txHash") != tx_hash]
+        
+    trade_id = len(trades) + 1
+    new_trade = {
+        "id": trade_id,
+        "txHash": tx_hash or f"0xmock{trade_id}",
+        "asset": asset,
+        "status": status,
+        "varianceBps": variance_bps,
+        "thresholdBps": threshold_bps,
+        "value": value,
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "prices": [float(p) for p in prices]
+    }
+    
+    trades.append(new_trade)
+    trades = trades[-20:]
+    
+    try:
+        with open(trades_file, "w") as f:
+            json.dump(trades, f, indent=2)
+        print(f"  Logged trade to dashboard/public/trades.json (hash: {new_trade['txHash'][:10]}...)")
+    except Exception as e:
+        print(f"Error writing to trades.json: {e}")
 
 
 # ─── ANSI Colors for Terminal Output ───────────────────────────
@@ -151,6 +213,7 @@ def _run_demo_simulated():
     print(f"  Threshold: 1000 bps{RESET}")
     time.sleep(0.5)
     
+    log_trade_to_json("RUGCOIN", "blocked", var_bps, 1000, "2.0 ETH", raw, f"0xmock_blocked_{int(time.time())}")
     print_blocked(f"Variance {var_bps} bps > 1000 bps limit")
     print(f"  {RED}Custom Error: VolatilityExceedsThreshold({var_bps}, 1000)")
     print(f"  Result: Transaction REVERTED. Funds SAFE. ✅{RESET}")
@@ -197,9 +260,11 @@ def _run_demo_simulated():
     print(f"  Threshold: 1000 bps{RESET}")
     time.sleep(0.5)
     
+    tx_hash_sim = f"0xmock_success_{int(time.time())}"
+    log_trade_to_json("ETH", "executed", var_bps_s, 1000, "1.0 ETH", raw_s, tx_hash_sim)
     print_approved(f"Variance {var_bps_s} bps ≤ 1000 bps limit")
     print(f"  {GREEN}Trade executed on-chain. 1 ETH → staking pool.")
-    print(f"  Tx hash: 0x{'a1b2c3d4' * 8} (simulated){RESET}")
+    print(f"  Tx hash: {tx_hash_sim} (simulated){RESET}")
     
     # ── Summary ──
     print(f"\n{'═' * 60}")
@@ -216,7 +281,7 @@ def _run_live():
     """Live mode — interacts with actual deployed contracts."""
     
     if not VAULT_ADDRESS or not AGENT_PRIVATE_KEY:
-        print(f"{RED}Error: AEGIS_VAULT_ADDRESS and AGENT_PRIVATE_KEY required for live mode{RESET}")
+        print(f"{RED}Error: VETO_VAULT_ADDRESS and AGENT_PRIVATE_KEY required for live mode{RESET}")
         print(f"{DIM}Configure .env file — see .env.example{RESET}")
         sys.exit(1)
     
@@ -244,47 +309,108 @@ def _run_live():
     print(f"  Threshold: {threshold} bps")
     print(f"  Stats: {executed} executed, {blocked} blocked")
     
-    # Attempt a trade with volatile prices
-    print_step(1, "Fetching prices for test asset...")
-    scaled, raw, meta = get_prices_for_trade("volatile")
+    # Use agent address as dummy target. Calling an EOA with empty data always succeeds.
+    target = account.address
     
-    print_step(2, "Submitting trade to Veto...")
+    # ── Scenario 1: Volatile trade (should fail/revert on-chain) ──
+    print(f"\n{'═' * 60}")
+    print(f"{RED}{BOLD}  SCENARIO 1: Submitting volatile trade to Veto (should revert){RESET}")
+    print(f"{'═' * 60}")
     
-    # Use a dummy target (address(1)) with empty calldata for demo
-    target = "0x0000000000000000000000000000000000000001"
+    print_step(1, "Fetching prices for volatile asset...")
+    scaled_v, raw_v, meta_v = get_prices_for_trade("volatile")
     
+    print_step(2, "Submitting volatile trade to Veto...")
     try:
-        tx = vault.functions.executeTrade(
+        tx_v = vault.functions.executeTrade(
             Web3.to_checksum_address(target),
             b"",  # empty calldata
             0,    # 0 ETH value
-            scaled,
+            scaled_v,
         ).build_transaction({
             "from": account.address,
             "nonce": w3.eth.get_transaction_count(account.address),
             "gas": 3_000_000,
-            "gasPrice": w3.eth.gas_price,
+            "gasPrice": int(w3.eth.gas_price * 1.2),  # bump gas price slightly to ensure quick inclusion
         })
         
-        signed = w3.eth.account.sign_transaction(tx, AGENT_PRIVATE_KEY)
-        tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
-        receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=60)
+        signed_v = w3.eth.account.sign_transaction(tx_v, AGENT_PRIVATE_KEY)
+        tx_hash_v = w3.eth.send_raw_transaction(signed_v.raw_transaction)
+        print(f"  {DIM}Transaction sent. Hash: {tx_hash_v.hex()}{RESET}")
+        print(f"  {DIM}Waiting for confirmation...{RESET}")
+        receipt_v = w3.eth.wait_for_transaction_receipt(tx_hash_v, timeout=60)
         
-        if receipt["status"] == 1:
-            print_approved(f"Tx: {tx_hash.hex()}")
+        var_bps_v = calculate_variance_bps(scaled_v)
+        if receipt_v["status"] == 1:
+            print_approved(f"Volatile trade executed successfully? (Unexpected) Tx: {tx_hash_v.hex()}")
+            log_trade_to_json("RUGCOIN", "executed", var_bps_v, threshold, "0.0 ETH", raw_v, tx_hash_v.hex())
         else:
-            print_blocked("Transaction reverted on-chain")
+            print_blocked(f"Volatility check failed. Transaction reverted on-chain. Hash: {tx_hash_v.hex()}")
+            log_trade_to_json("RUGCOIN", "blocked", var_bps_v, threshold, "0.0 ETH", raw_v, tx_hash_v.hex())
             
     except ContractLogicError as e:
         error_msg = str(e)
+        var_bps_v = calculate_variance_bps(scaled_v)
         if "VolatilityExceedsThreshold" in error_msg:
             print_blocked(f"Risk Engine blocked: {error_msg}")
+            log_trade_to_json("RUGCOIN", "blocked", var_bps_v, threshold, "0.0 ETH", raw_v, f"0xreverted_before_send_{int(time.time())}")
         else:
             print(f"{RED}Contract error: {error_msg}{RESET}")
     except Exception as e:
         print(f"{RED}Error: {e}{RESET}")
         traceback.print_exc()
 
+    # ── Scenario 2: Stable trade (should succeed on-chain) ──
+    print(f"\n{'═' * 60}")
+    print(f"{GREEN}{BOLD}  SCENARIO 2: Submitting stable trade to Veto (should succeed){RESET}")
+    print(f"{'═' * 60}")
+    
+    print_step(1, "Fetching prices for stable asset...")
+    scaled_s, raw_s, meta_s = get_prices_for_trade("ethereum")
+    
+    print_step(2, "Submitting stable trade to Veto...")
+    try:
+        tx_s = vault.functions.executeTrade(
+            Web3.to_checksum_address(target),
+            b"",  # empty calldata
+            0,    # 0 ETH value
+            scaled_s,
+        ).build_transaction({
+            "from": account.address,
+            "nonce": w3.eth.get_transaction_count(account.address),
+            "gas": 3_000_000,
+            "gasPrice": int(w3.eth.gas_price * 1.2),  # bump gas price slightly
+        })
+        
+        signed_s = w3.eth.account.sign_transaction(tx_s, AGENT_PRIVATE_KEY)
+        tx_hash_s = w3.eth.send_raw_transaction(signed_s.raw_transaction)
+        print(f"  {DIM}Transaction sent. Hash: {tx_hash_s.hex()}{RESET}")
+        print(f"  {DIM}Waiting for confirmation...{RESET}")
+        receipt_s = w3.eth.wait_for_transaction_receipt(tx_hash_s, timeout=60)
+        
+        var_bps_s = calculate_variance_bps(scaled_s)
+        if receipt_s["status"] == 1:
+            print_approved(f"Stable trade executed on-chain. Tx: {tx_hash_s.hex()}")
+            log_trade_to_json("ETH", "executed", var_bps_s, threshold, "0.0 ETH", raw_s, tx_hash_s.hex())
+        else:
+            print_blocked(f"Stable trade reverted on-chain. Hash: {tx_hash_s.hex()}")
+            log_trade_to_json("ETH", "blocked", var_bps_s, threshold, "0.0 ETH", raw_s, tx_hash_s.hex())
+            
+    except ContractLogicError as e:
+        print(f"{RED}Contract error: {e}{RESET}")
+    except Exception as e:
+        print(f"{RED}Error: {e}{RESET}")
+        traceback.print_exc()
 
-if __name__ == "__main__":
+    # Read final state
+    executed_f, blocked_f = vault.functions.stats().call()
+    print(f"\n{'═' * 60}")
+    print(f"{CYAN}{BOLD}  FINAL STATE{RESET}")
+    print(f"{'═' * 60}")
+    print(f"  Executed trades: {executed_f} (change: +{executed_f - executed})")
+    print(f"  Blocked trades:  {blocked_f} (change: +{blocked_f - blocked})")
+    print(f"  (Note: blocked trades revert, so their state changes roll back, but they are recorded on-chain as reverted txs)")
+
+
+if __name__ == "__main__":  # pragma: no cover
     run_demo()

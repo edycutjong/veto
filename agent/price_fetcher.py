@@ -62,6 +62,8 @@ def fetch_live_prices(
     except requests.RequestException as e:
         print(f"[PriceFetcher] API error: {e}")
         print(f"[PriceFetcher] Falling back to demo prices")
+        if coin_id.lower() in ("shitcoin", "rugcoin", "memecoin", "volatile"):
+            return DEMO_VOLATILE_PRICES_USD
         return DEMO_STABLE_PRICES_USD
 
 
@@ -115,7 +117,7 @@ def get_prices_for_trade(asset: str = "ethereum") -> tuple[list[int], list[float
     return scaled_prices, raw_prices, metadata
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     # Quick test
     scaled, raw, meta = get_prices_for_trade("ethereum")
     print(f"\nScaled prices (first 5): {scaled[:5]}")

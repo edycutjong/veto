@@ -11,12 +11,11 @@ load_dotenv()
 
 # ─── Environment ───────────────────────────────────────────────
 
-RPC_URL = os.getenv("RPC_URL", "https://testnet-rpc.chain.robinhood.com/")
+RPC_URL = os.getenv("RPC_URL", "https://rpc.testnet.chain.robinhood.com")
 AGENT_PRIVATE_KEY = os.getenv("AGENT_PRIVATE_KEY", "")
-VAULT_ADDRESS = os.getenv("AEGIS_VAULT_ADDRESS", "")
+VAULT_ADDRESS = os.getenv("VETO_VAULT_ADDRESS", "")
 RISK_ENGINE_ADDRESS = os.getenv("RISK_ENGINE_ADDRESS", "")
 COINGECKO_API_URL = os.getenv("COINGECKO_API_URL", "https://api.coingecko.com/api/v3")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 DEMO_MODE = os.getenv("DEMO_MODE", "true").lower() == "true"
 
 # ─── Price Scaling ─────────────────────────────────────────────
