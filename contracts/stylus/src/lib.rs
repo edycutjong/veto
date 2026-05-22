@@ -1,7 +1,7 @@
-//! AegisVault Risk Engine — Stylus (WASM) Math Coprocessor
+//! VetoVault Risk Engine — Stylus (WASM) Math Coprocessor
 //!
 //! Computes historical asset variance on-chain using pure U256 integer math.
-//! This contract is called by the Solidity AegisVault contract to determine
+//! This contract is called by the Solidity VetoVault contract to determine
 //! whether an AI agent's proposed trade exceeds the owner's volatility threshold.
 //!
 //! Architecture: "WASM as a Math Coprocessor"
@@ -168,7 +168,7 @@ impl RiskEngine {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "stylus-test"))]
 mod test {
     use super::*;
 
