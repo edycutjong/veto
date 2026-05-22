@@ -33,6 +33,26 @@
 
 ---
 
+## ⛓️ Live On-Chain Verification
+
+Veto is fully deployed and verified on **Arbitrum Sepolia Testnet**. All trade validation and program logic are executed live on-chain, proving the physical block capabilities of the Stylus WASM math coprocessor:
+
+- **Stylus RiskEngine (WASM)**: [`0x0a94398c550226ca01570afede89e378d81e9426`](https://sepolia.arbiscan.io/address/0x0a94398c550226ca01570afede89e378d81e9426)
+- **VetoVault (Solidity/EVM)**: [`0x77435CF556A3705496Aa3739bD3678D9edfcB69c`](https://sepolia.arbiscan.io/address/0x77435CF556A3705496Aa3739bD3678D9edfcB69c)
+- **Agent/Wallet Address**: [`0x2236AA5667BAbcB4218288517d6aE75bBbd486Af`](https://sepolia.arbiscan.io/address/0x2236AA5667BAbcB4218288517d6aE75bBbd486Af)
+
+### On-Chain Transactions:
+1. **Scenario 1 (Volatile trade) → BLOCKED & REVERTED**:
+   - The AI agent attempted to allocate trade capital to a volatile asset.
+   - **Transaction Hash**: [`0xdd3fc5faa8127784159b2ecf9e7c26dd6c5f4e37855cadac6255b9abcabc069f`](https://sepolia.arbiscan.io/tx/0xdd3fc5faa8127784159b2ecf9e7c26dd6c5f4e37855cadac6255b9abcabc069f)
+   - **Result**: Transaction successfully intercepted and **reverted** on-chain with custom error `VolatilityExceedsThreshold(computedBps, thresholdBps)`.
+2. **Scenario 2 (Stable trade) → APPROVED & EXECUTED**:
+   - The AI agent allocated capital to stable Ethereum (variance under threshold).
+   - **Transaction Hash**: [`0x20c9ef0683ac5bda2c264e1ed384df807217898f9dd2007c4dc5603c64df6f0d`](https://sepolia.arbiscan.io/tx/0x20c9ef0683ac5bda2c264e1ed384df807217898f9dd2007c4dc5603c64df6f0d)
+   - **Result**: Transaction approved and **executed** on-chain.
+
+---
+
 ## 💡 The Problem & Solution
 
 Autonomous AI trading agents are proliferating across DeFi. They optimize for return, not safety. Smart contract wallets implement access control (who can call), but not execution physics (what's sane to call). On-chain statistical computation in Solidity costs tens of thousands of gas.

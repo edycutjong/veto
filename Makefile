@@ -1,8 +1,12 @@
-.PHONY: test-all coverage-all test-solidity coverage-solidity test-stylus coverage-stylus test-agent coverage-agent test-dashboard coverage-dashboard setup-stylus-cov deploy demo clean
+.PHONY: test-all coverage-all test-solidity coverage-solidity test-stylus coverage-stylus test-agent coverage-agent test-dashboard coverage-dashboard setup-stylus-cov deploy demo clean ci
 
 test-all: test-solidity test-stylus test-agent test-dashboard
 
 coverage-all: coverage-solidity coverage-stylus coverage-agent coverage-dashboard
+
+ci: test-solidity test-stylus coverage-agent
+	cd dashboard && npm run ci
+
 
 # Solidity
 test-solidity:
