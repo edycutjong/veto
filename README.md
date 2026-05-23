@@ -6,7 +6,7 @@
   <br/>
 
   [![Live Demo](https://img.shields.io/badge/🚀_Live-Demo-06b6d4?style=for-the-badge)](https://veto.edycu.dev)
-  [![Pitch Video](https://img.shields.io/badge/🎬_Pitch-Video-ef4444?style=for-the-badge)](https://youtu.be/your-video)
+  [![Pitch Deck](https://img.shields.io/badge/📊_Pitch-Deck-f59e0b?style=for-the-badge)](https://veto.edycu.dev/pitch/index.html)
   [![Built for Arbitrum London](https://img.shields.io/badge/HackQuest-Arbitrum_London_2026-8b5cf6?style=for-the-badge)](https://www.hackquest.io/hackathons/Arbitrum-Open-House-London-Online-Buildathon)
 
   <br/>
@@ -68,10 +68,6 @@ Autonomous AI trading agents are proliferating across DeFi. They optimize for re
 
 ## 🏗️ Architecture & Tech Stack
 
-<div align="center">
-  <img src="docs/architecture.png" alt="Veto Architecture" width="100%">
-</div>
-
 | Layer | Technology |
 |---|---|
 | **Vault** | Solidity (EVM) — fund custody, access control, 23 passing tests |
@@ -104,26 +100,27 @@ Autonomous AI trading agents are proliferating across DeFi. They optimize for re
 ### Prerequisites
 - Node.js ≥ 20
 - Rust + `cargo-stylus`
-- Python 3.12+
+- Python 3.11+
 - Foundry (`forge`, `cast`)
 
 ### Installation
 
 ```bash
 # 1. Clone
-git clone https://github.com/edycutjong/veto.git && cd veto
+git clone https://github.com/edycutjong/veto.git
+cd veto
 
 # 2. Run Solidity tests (23 tests)
-cd contracts/solidity && forge test -vvv
+cd contracts/solidity && forge test -vvv && cd ../..
 
 # 3. Build Stylus WASM
-cd ../stylus && cargo build --release --target wasm32-unknown-unknown
+cd contracts/stylus && cargo build --release --target wasm32-unknown-unknown && cd ../..
 
 # 4. Run the agent (demo mode)
-cd ../../agent && pip install -r requirements.txt && python agent.py
+cd agent && pip install -r requirements.txt && python agent.py && cd ..
 
 # 5. Run the dashboard
-cd ../dashboard && npm install && npm run dev
+cd dashboard && npm install && npm run dev
 ```
 
 > **For Judges:** The dashboard runs in DEMO mode by default — no wallet or testnet needed. Just `npm run dev` and open http://localhost:3000.
@@ -135,7 +132,7 @@ cd ../dashboard && npm install && npm run dev
 cd dashboard
 npm run lint          # ESLint
 npm run typecheck     # TypeScript check
-npm run ci            # Full CI pipeline (lint + typecheck + build)
+npm run ci            # Full CI pipeline (lint + typecheck + test + build)
 
 # Solidity (23 tests)
 cd contracts/solidity
@@ -153,22 +150,35 @@ CI runs on every push via GitHub Actions: Dashboard (Node 20/22/24), Foundry tes
 ```
 veto/
 ├── contracts/
-│   ├── solidity/          # VetoVault.sol + RiskEngineSol.sol (benchmark)
-│   │   ├── src/           # Contract source
-│   │   └── test/          # Foundry tests (23 passing)
-│   └── stylus/            # RiskEngine.rs (WASM math coprocessor)
-│       └── src/           # lib.rs + main.rs
-├── agent/                 # Python AI trading agent
-│   ├── agent.py           # Orchestrator (demo + live modes)
-│   ├── config.py          # Contract ABIs and addresses
-│   ├── price_fetcher.py   # CoinGecko price feed
-│   └── .env.example       # Environment template
-├── dashboard/             # Next.js 16 cyberpunk dashboard
-│   ├── src/app/           # Pages and layout
-│   └── public/            # Icon SVG + OG image
-├── docs/                  # README assets (hero, architecture, screenshots)
-├── .github/               # CI + CodeQL + Dependabot
-└── LICENSE                # MIT
+│   ├── solidity/               # EVM layer
+│   │   ├── src/
+│   │   │   ├── VetoVault.sol       # Fund custody + trade interception
+│   │   │   ├── IRiskEngine.sol     # Interface for cross-contract Stylus call
+│   │   │   └── RiskEngineSol.sol   # Pure-Solidity variance (gas benchmark)
+│   │   └── test/
+│   │       └── VetoVault.t.sol     # Foundry tests (23 passing)
+│   └── stylus/                 # WASM math coprocessor (Rust)
+│       └── src/
+│           ├── lib.rs              # compute_variance() + check_volatility()
+│           └── main.rs             # Stylus entrypoint
+├── agent/                      # Python AI trading agent
+│   ├── agent.py                # Orchestrator (demo + live modes)
+│   ├── config.py               # Contract ABIs and addresses
+│   ├── price_fetcher.py        # CoinGecko price feed
+│   ├── Procfile                # Railway start command
+│   ├── requirements.txt        # Python dependencies
+│   ├── .env.example            # Environment template
+│   └── tests/                  # pytest suites
+│       ├── test_agent.py
+│       └── test_price_fetcher.py
+├── dashboard/                  # Next.js 16 cyberpunk dashboard
+│   ├── src/app/                # Pages and layout
+│   └── public/                 # Icon SVG + OG image
+├── docs/                       # README assets (hero, architecture, screenshots)
+├── scripts/                    # Deployment helpers (deploy.sh, verify.sh, demo.sh)
+├── test/                       # Integration tests
+├── .github/                    # CI + CodeQL + Dependabot
+└── LICENSE                     # MIT
 ```
 
 ## 📄 License

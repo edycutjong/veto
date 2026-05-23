@@ -188,6 +188,36 @@ describe("Dashboard Page", () => {
     mockFetch.mockRestore();
   });
 
+  it("uses agent url if environment variable is set", async () => {
+    const originalEnv = process.env.NEXT_PUBLIC_AGENT_URL;
+    process.env.NEXT_PUBLIC_AGENT_URL = "http://mock-agent.com";
+
+    const mockFetch = jest.spyOn(global, "fetch").mockImplementation((url) => {
+      if (url === "http://mock-agent.com/api/trades") {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        } as Response);
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      } as Response);
+    });
+
+    render(<Page />);
+
+    await act(async () => {
+      jest.advanceTimersByTime(5000);
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith("http://mock-agent.com/api/trades");
+
+    mockFetch.mockRestore();
+    process.env.NEXT_PUBLIC_AGENT_URL = originalEnv;
+  });
+
+
   it("toggles scanline shaking animation on Simulate Block click", async () => {
     render(<Page />);
 

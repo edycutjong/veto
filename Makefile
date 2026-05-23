@@ -4,8 +4,8 @@ test-all: test-solidity test-stylus test-agent test-dashboard
 
 coverage-all: coverage-solidity coverage-stylus coverage-agent coverage-dashboard
 
-ci: test-solidity test-stylus coverage-agent
-	cd dashboard && npm run ci
+ci: coverage-solidity coverage-stylus coverage-agent coverage-dashboard
+	cd dashboard && npm run lint && npm run typecheck && npm run build
 
 
 # Solidity
@@ -33,7 +33,7 @@ test-agent:
 	cd agent && . .venv/bin/activate && python3 -m pytest tests/
 
 coverage-agent:
-	cd agent && . .venv/bin/activate && python3 -m pytest --cov=. tests/
+	cd agent && . .venv/bin/activate && python3 -m pytest --cov=. --cov-report=term-missing --cov-fail-under=100 tests/
 
 # Dashboard
 test-dashboard:

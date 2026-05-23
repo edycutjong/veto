@@ -378,9 +378,8 @@ export default function Dashboard() {
             <div>
               <div className="flex items-center gap-2">
                 <Link href="/" className="hover:opacity-90">
-                  <h1 className="text-xl font-bold tracking-tight">
-                    <span className="text-primary">Ve</span>
-                    <span className="text-slate-300">to</span>
+                  <h1 className="text-xl font-black tracking-widest uppercase">
+                    <span className="text-primary">VE</span><span className="text-danger">TO</span>
                   </h1>
                 </Link>
                 <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-red-500/10 text-red-400 border border-red-500/20 tracking-wider uppercase">WASM Shield</span>

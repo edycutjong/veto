@@ -246,3 +246,63 @@ def test_run_live_all_scenarios(mock_calc_var, mock_log, mock_get_prices, mock_w
     ]
     _run_live()
 
+
+def test_init_trades_cache_error():
+    from agent import init_trades_cache
+    with patch('agent.os.path.exists', return_value=True), \
+         patch('agent.open', side_effect=Exception("load error")):
+        # This should handle the exception and print the error message
+        init_trades_cache()
+
+
+def test_api_endpoints():
+    from agent import get_trades, health_check
+    trades = get_trades()
+    assert isinstance(trades, list)
+    
+    health = health_check()
+    assert health["status"] == "healthy"
+
+
+@patch('agent.time.sleep')
+@patch('agent._run_demo_simulated')
+@patch('agent.DEMO_MODE', True)
+def test_agent_loop_demo(mock_run, mock_sleep):
+    from agent import agent_loop
+    # First sleep(2) returns normal, second sleep(LOOP_INTERVAL) raises Exception to break the loop
+    mock_sleep.side_effect = [None, ValueError("break loop")]
+    
+    with pytest.raises(ValueError, match="break loop"):
+        agent_loop()
+    
+    mock_run.assert_called_once()
+
+
+@patch('agent.time.sleep')
+@patch('agent._run_live')
+@patch('agent.DEMO_MODE', False)
+def test_agent_loop_live(mock_run, mock_sleep):
+    from agent import agent_loop
+    mock_sleep.side_effect = [None, ValueError("break loop")]
+    
+    with pytest.raises(ValueError, match="break loop"):
+        agent_loop()
+    
+    mock_run.assert_called_once()
+
+
+@patch('agent.time.sleep')
+@patch('agent._run_demo_simulated')
+@patch('agent.DEMO_MODE', True)
+def test_agent_loop_exception(mock_run, mock_sleep, capsys):
+    from agent import agent_loop
+    mock_run.side_effect = Exception("simulated cycle error")
+    mock_sleep.side_effect = [None, ValueError("break loop")]
+    
+    with pytest.raises(ValueError, match="break loop"):
+        agent_loop()
+        
+    captured = capsys.readouterr()
+    assert "[AgentLoop] Error in cycle: simulated cycle error" in captured.out
+
+

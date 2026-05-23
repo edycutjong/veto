@@ -285,6 +285,70 @@ contract VetoVaultTest is Test {
 
     // Receive ETH (for withdraw tests)
     receive() external payable {}
+
+    // ─── Solidity Coverage Extensions ─────────────────────────
+
+    function test_setRiskEngine() public {
+        address newRiskEngine = address(0xC2);
+        vault.setRiskEngine(newRiskEngine);
+        assertEq(address(vault.riskEngine()), newRiskEngine);
+    }
+
+    function test_onlyOwner_setRiskEngine() public {
+        vm.prank(randomUser);
+        vm.expectRevert(VetoVault.NotOwner.selector);
+        vault.setRiskEngine(address(0xC2));
+    }
+
+    function test_withdraw_transferFailed_reverts() public {
+        RevertingTarget revTarget = new RevertingTarget();
+        vm.expectRevert(VetoVault.TransferFailed.selector);
+        vault.withdraw(payable(address(revTarget)), 1 ether);
+    }
+
+    function test_executeTrade_transferFailed_reverts() public {
+        uint256[] memory prices = _stablePrices();
+        RevertingTarget revTarget = new RevertingTarget();
+        
+        vm.prank(agent);
+        vm.expectRevert(VetoVault.TransferFailed.selector);
+        vault.executeTrade(address(revTarget), "", 0.1 ether, prices);
+    }
+
+    function test_riskEngine_checkVolatility_lenLessThan2() public {
+        uint256[] memory prices = new uint256[](1);
+        prices[0] = 100;
+        assertTrue(riskEngine.checkVolatility(prices, 1000));
+    }
+
+    function test_riskEngine_checkVolatility_meanZero() public {
+        uint256[] memory prices = new uint256[](2);
+        prices[0] = 0;
+        prices[1] = 0;
+        assertFalse(riskEngine.checkVolatility(prices, 1000));
+    }
+
+    function test_riskEngine_computeVariance_lenLessThan2() public {
+        uint256[] memory prices = new uint256[](1);
+        prices[0] = 100;
+        assertEq(riskEngine.computeVariance(prices), 0);
+    }
+
+    function test_riskEngine_computeVariance_meanZero() public {
+        uint256[] memory prices = new uint256[](2);
+        prices[0] = 0;
+        prices[1] = 0;
+        assertEq(riskEngine.computeVariance(prices), 0);
+    }
+
+    function test_riskEngine_computeVariance_withDeviation() public {
+        uint256[] memory prices = new uint256[](3);
+        prices[0] = 100; // mean = 200, below mean
+        prices[1] = 200; // mean = 200
+        prices[2] = 300; // mean = 200, above mean
+        uint256 variance = riskEngine.computeVariance(prices);
+        assertTrue(variance > 0);
+    }
 }
 
 /**
@@ -302,3 +366,16 @@ contract MockTarget {
         callCount++;
     }
 }
+
+/**
+ * @title RevertingTarget — A mock contract that always reverts when called or sent ETH
+ */
+contract RevertingTarget {
+    receive() external payable {
+        revert("I reject ETH");
+    }
+    fallback() external payable {
+        revert("I reject call");
+    }
+}
+

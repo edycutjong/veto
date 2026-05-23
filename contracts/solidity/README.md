@@ -1,66 +1,47 @@
-## Foundry
+# Veto — Solidity Contracts
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+EVM layer of the Veto execution sandbox. Handles fund custody, access control, and cross-contract calls to the Stylus WASM risk engine.
 
-Foundry consists of:
+## Contracts
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+| Contract | Purpose |
+|---|---|
+| `VetoVault.sol` | Main vault — holds funds, intercepts agent trades, calls risk engine |
+| `IRiskEngine.sol` | Interface for cross-contract ABI call to the Stylus WASM coprocessor |
+| `RiskEngineSol.sol` | Pure-Solidity variance implementation (gas benchmark only) |
 
-## Documentation
+## Tests
 
-https://book.getfoundry.sh/
+23 tests, all passing. Run with:
 
-## Usage
-
-### Build
-
-```shell
-$ forge build
+```bash
+forge test -vvv
 ```
 
-### Test
+Gas snapshot:
 
-```shell
-$ forge test
+```bash
+forge snapshot
 ```
 
-### Format
+## Deployment
 
-```shell
-$ forge fmt
+```bash
+forge script script/Deploy.s.sol:DeployScript \
+  --rpc-url $RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast
 ```
 
-### Gas Snapshots
+Set `RPC_URL` to the Robinhood Chain / Arbitrum Sepolia RPC endpoint. After deployment, copy the `VetoVault` and `RiskEngine` addresses into `agent/.env`.
 
-```shell
-$ forge snapshot
-```
+## Deployed Addresses (Arbitrum Sepolia)
 
-### Anvil
+| Contract | Address |
+|---|---|
+| RiskEngine (WASM) | `0x0a94398c550226ca01570afede89e378d81e9426` |
+| VetoVault | `0x77435CF556A3705496Aa3739bD3678D9edfcB69c` |
 
-```shell
-$ anvil
-```
+## Toolchain
 
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+Built with [Foundry](https://book.getfoundry.sh/). See `forge --help` for the full CLI reference.

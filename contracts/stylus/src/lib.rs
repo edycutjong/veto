@@ -259,4 +259,34 @@ mod test {
         let variance = engine.compute_variance(prices);
         assert_eq!(variance, U256::ZERO);
     }
+
+    #[test]
+    fn test_coverage_edge_cases() {
+        use stylus_sdk::testing::*;
+        let vm = TestVM::default();
+        let mut engine = RiskEngine::from(&vm);
+
+        // check_volatility with zero mean
+        let zero_prices = vec![U256::ZERO, U256::ZERO];
+        let result = engine.check_volatility(zero_prices.clone(), U256::from(500u64));
+        assert!(!result, "Zero mean prices should fail check_volatility");
+
+        // compute_variance with zero mean
+        let var_zero = engine.compute_variance(zero_prices);
+        assert_eq!(var_zero, U256::ZERO);
+
+        // compute_variance with less than 2 prices
+        let empty_prices: Vec<U256> = vec![];
+        let var_empty = engine.compute_variance(empty_prices);
+        assert_eq!(var_empty, U256::ZERO);
+
+        // Call getters: last_variance, last_mean, last_count
+        let prices = vec![U256::from(10u64), U256::from(20u64)];
+        let _ = engine.check_volatility(prices, U256::from(1000u64));
+
+        assert_eq!(engine.last_count(), U256::from(2u64));
+        assert_eq!(engine.last_mean(), U256::from(15u64));
+        // variance of [10, 20]: mean = 15, dev = [-5, 5], sum_sq_dev = 25+25 = 50. variance = 50 / 2 = 25.
+        assert_eq!(engine.last_variance(), U256::from(25u64));
+    }
 }

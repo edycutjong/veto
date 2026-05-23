@@ -19,9 +19,12 @@ The **Veto Autonomous Trading Agent** is an aggressive Python-based daemon that 
 *   `agent.py`: Main orchestrator containing the trade-execution logic, background daemon thread, and FastAPI telemetry server.
 *   `price_fetcher.py`: Queries CoinGecko API for real-time prices or generates mock historical datasets for demo mode.
 *   `config.py`: Loads environment configurations, handles fixed-point price scaling, and stores Contract ABIs.
-*   `Procfile`: Specifies the Railway start command (`web: python agent.py`).
-*   `requirements.txt`: Python package dependencies (Web3.py, FastAPI, Uvicorn, etc.).
-*   `tests/`: Unit and integration test suites validating execution logic and price fetching.
+*   `Procfile`: Railway start command (`web: python agent.py`).
+*   `requirements.txt`: Python package dependencies (web3, FastAPI, Uvicorn, pytest, etc.).
+*   `.env.example`: Environment variable template — copy to `.env` and fill in values.
+*   `tests/`: Unit and integration test suites.
+    *   `test_agent.py`: Tests for trade execution logic and agent orchestration.
+    *   `test_price_fetcher.py`: Tests for CoinGecko integration and mock price generation.
 
 ---
 
