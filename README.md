@@ -8,6 +8,8 @@
   [![Live Demo](https://img.shields.io/badge/🚀_Live-Demo-06b6d4?style=for-the-badge)](https://veto.edycu.dev)
   [![Pitch Deck](https://img.shields.io/badge/📊_Pitch-Deck-f59e0b?style=for-the-badge)](https://veto.edycu.dev/pitch/index.html)
   [![Built for Arbitrum London](https://img.shields.io/badge/HackQuest-Arbitrum_London_2026-8b5cf6?style=for-the-badge)](https://www.hackquest.io/hackathons/Arbitrum-Open-House-London-Online-Buildathon)
+  ![Status](https://img.shields.io/website?url=https%3A%2F%2Fveto.edycu.dev&style=for-the-badge&label=demo&up_message=live&down_message=offline&up_color=00C805&down_color=ef4444)
+  ![Agent](https://img.shields.io/website?url=https%3A%2F%2Fapi.veto.edycu.dev%2Fhealth&style=for-the-badge&label=agent&up_message=live&down_message=offline&up_color=00C805&down_color=ef4444)
 
   <br/>
 
