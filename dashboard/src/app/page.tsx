@@ -42,7 +42,7 @@ function CanvasBackground() {
       draw(c: CanvasRenderingContext2D) {
         c.beginPath();
         c.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        c.fillStyle = "rgba(0, 200, 5, 0.35)";
+        c.fillStyle = "rgba(6, 182, 212, 0.35)";
         c.fill();
       }
     }
@@ -56,7 +56,7 @@ function CanvasBackground() {
     document.body.addEventListener("mouseleave", onMouseLeave);
 
     const drawGrid = (c: CanvasRenderingContext2D) => {
-      c.strokeStyle = "rgba(0, 200, 5, 0.018)";
+      c.strokeStyle = "rgba(6, 182, 212, 0.018)";
       c.lineWidth = 0.5;
       for (let x = 0; x < width; x += 48) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, height); c.stroke(); }
       for (let y = 0; y < height; y += 48) { c.beginPath(); c.moveTo(0, y); c.lineTo(width, y); c.stroke(); }
@@ -73,7 +73,7 @@ function CanvasBackground() {
           const dy = particles[i].y - particles[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < 110) {
-            ctx.strokeStyle = `rgba(0, 200, 5, ${(1 - dist / 110) * 0.12})`;
+            ctx.strokeStyle = `rgba(6, 182, 212, ${(1 - dist / 110) * 0.12})`;
             ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
           }
         }
@@ -82,7 +82,7 @@ function CanvasBackground() {
           const mdy = particles[i].y - mouseRef.current.y;
           const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
           if (mdist < 160) {
-            ctx.strokeStyle = `rgba(0, 200, 5, ${(1 - mdist / 160) * 0.22})`;
+            ctx.strokeStyle = `rgba(6, 182, 212, ${(1 - mdist / 160) * 0.22})`;
             ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(mouseRef.current.x, mouseRef.current.y); ctx.stroke();
           }
         }
@@ -126,7 +126,7 @@ function getLogClass(log: string): string {
   } else if (log.includes("[WASM]")) {
     return "text-amber-400/80";
   } else if (log.includes("[Vault]")) {
-    return "text-emerald-400";
+    return "text-cyan-400";
   } else if (log.includes("[Veto]")) {
     return "text-slate-300";
   } else {
@@ -141,6 +141,7 @@ export default function LandingPage() {
   const [simState, setSimState] = useState<"idle" | "sending" | "evaluating" | "result">("idle");
   const [simResult, setSimResult] = useState<"blocked" | "executed" | null>(null);
   const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
+  const [showBlockedModal, setShowBlockedModal] = useState(false);
 
   const startSimulation = useCallback(() => {
     setSimState("sending");
@@ -172,6 +173,7 @@ export default function LandingPage() {
           setSimState("result");
           if (selectedAsset === "RUGCOIN") {
             setSimResult("blocked");
+            setShowBlockedModal(true);
             setTerminalLogs((p) => [...p,
               `[WASM]  variance = 2,450 BPS  |  threshold = 1,000 BPS`,
               `[WASM]  RISK: Volatility exceeds absolute safety limit`,
@@ -206,7 +208,7 @@ export default function LandingPage() {
 
           {/* Logo */}
           <div className="flex items-center gap-3 shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/25">
+            <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary to-cyan-600 flex items-center justify-center shadow-lg shadow-primary/25">
               <ShieldIcon className="w-4 h-4 text-white" />
             </div>
             <span className="font-display text-base font-black tracking-widest">
@@ -676,7 +678,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
 
           <div className="flex items-center gap-2.5">
-            <div className="w-5 h-5 rounded bg-linear-to-br from-primary to-emerald-600 flex items-center justify-center">
+            <div className="w-5 h-5 rounded bg-linear-to-br from-primary to-cyan-600 flex items-center justify-center">
               <ShieldIcon className="w-3 h-3 text-white" />
             </div>
             <span className="font-display text-xs font-black tracking-widest">
@@ -704,6 +706,51 @@ export default function LandingPage() {
           animation: pathFlow 1s linear infinite;
         }
       `}</style>
+
+      {/* Red Alert Modal */}
+      {showBlockedModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md">
+          <div className="relative glass-card border border-red-500/30 max-w-md w-full mx-4 overflow-hidden shadow-2xl shadow-red-500/10 p-6 glow-red animate-fade-in-up">
+            <div className="flex items-center gap-3 mb-4 text-red-500">
+              <svg className="w-8 h-8 animate-pulse shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <h3 className="font-display font-black text-sm uppercase tracking-widest leading-none">
+                  Veto Shield Intercept
+                </h3>
+                <p className="text-[9px] font-mono text-red-400/80 mt-1 uppercase tracking-wider">REVERTED ON-CHAIN</p>
+              </div>
+            </div>
+
+            <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4 mb-5">
+              <p className="font-mono text-xs text-red-400 leading-normal">
+                <span className="font-bold text-red-500 uppercase block mb-1">Custom Error:</span>
+                VolatilityExceedsThreshold(2450, 1000)
+              </p>
+            </div>
+
+            <p className="text-xs text-slate-400 leading-relaxed mb-6">
+              The Arbitrum Stylus WASM risk engine calculated a historical price variance of <span className="text-slate-200 font-bold font-mono">2,450 BPS</span>, which exceeds the configured maximum safety limit of <span className="text-slate-200 font-bold font-mono">1,000 BPS</span> (10.0%). The swap transaction was immediately vetoed, safeguarding vault capital.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowBlockedModal(false)}
+                className="flex-1 py-2.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 font-display font-black text-[10px] tracking-wider hover:bg-red-500/20 transition-all uppercase"
+              >
+                Dismiss Shield Warn
+              </button>
+              <Link
+                href="/dashboard"
+                className="flex-1 py-2.5 rounded-lg bg-red-500 text-white font-display font-black text-[10px] tracking-wider hover:bg-red-600 transition-all text-center flex items-center justify-center uppercase"
+              >
+                Open Console
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

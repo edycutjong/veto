@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, Fragment } from "react";
 import Link from "next/link";
 
 // ─── Types ────────────────────────────────────────────────────
@@ -31,264 +31,187 @@ interface VaultStats {
 // ─── Components ───────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: "blocked" | "executed" | "pending" }) {
-  const styles = {
-    blocked: "bg-red-500/10 text-red-400 border-red-500/30",
-    executed: "bg-primary/10 text-primary border-primary/30",
-    pending: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-  };
-
-  const getIcon = () => {
-    switch (status) {
-      case "blocked":
-        return (
-          <svg className="w-3.5 h-3.5 text-red-400 mr-1.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-        );
-      case "executed":
-        return (
-          <svg className="w-3.5 h-3.5 text-primary mr-1.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        );
-      case "pending":
-        return (
-          <svg className="w-3.5 h-3.5 text-amber-400 mr-1.5 animate-spin shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89" />
-          </svg>
-        );
-    }
-  };
-
-  const labels = {
-    blocked: "BLOCKED",
-    executed: "EXECUTED",
-    pending: "PENDING",
-  };
+  const map = {
+    blocked:  { dot: "bg-red-500",              text: "text-red-400",   label: "BLOCKED"  },
+    executed: { dot: "bg-cyan-500",              text: "text-cyan-400",  label: "EXECUTED" },
+    pending:  { dot: "bg-amber-500 animate-pulse", text: "text-amber-400", label: "PENDING"  },
+  }[status];
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-mono border font-semibold tracking-wider ${styles[status]}`}>
-      {getIcon()}
-      {labels[status]}
+    <span className={`inline-flex items-center gap-1.5 text-[10px] font-mono font-bold tracking-widest ${map.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${map.dot}`} />
+      {map.label}
     </span>
   );
 }
 
-function StatCard({
-  label,
-  value,
-  accent,
-  subtitle,
-  delayClass = "",
-}: {
-  label: string;
-  value: string | number;
-  accent: "primary" | "red" | "green" | "amber";
-  subtitle?: string;
-  delayClass?: string;
-}) {
-  const accentColors = {
-    primary: "text-primary border-primary/20",
-    red: "text-red-400 border-red-500/20",
-    green: "text-primary border-primary/20",
-    amber: "text-amber-400 border-amber-500/20",
-  };
-
-  return (
-    <div className={`glass-card border-gradient p-5 animate-fade-in-up ${delayClass}`}>
-      <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-1">{label}</p>
-      <p className={`text-2xl font-mono font-bold ${accentColors[accent]}`}>{value}</p>
-      {subtitle && <p className="text-xs text-slate-600 mt-1 font-mono">{subtitle}</p>}
-    </div>
-  );
-}
-
-function PriceChart({ prices, blocked }: { prices: number[]; blocked: boolean }) {
-  if (!prices || !prices.length) return null;
-
+function SparkLine({ prices, blocked }: { prices: number[]; blocked: boolean }) {
+  if (!prices?.length) return null;
   const min = Math.min(...prices);
   const max = Math.max(...prices);
   const range = max - min || 1;
-  const width = 300;
-  const height = 80;
-  const padding = 4;
-
-  const points = prices
-    .map((p, i) => {
-      const x = padding + (i / (prices.length - 1)) * (width - padding * 2);
-      const y = height - padding - ((p - min) / range) * (height - padding * 2);
-      return `${x},${y}`;
-    })
+  const W = 80, H = 28, P = 2;
+  const pts = prices
+    .map((p, i) => `${P + (i / (prices.length - 1)) * (W - P * 2)},${H - P - ((p - min) / range) * (H - P * 2)}`)
     .join(" ");
-
-  const color = blocked ? "#ef4444" : "#00C805";
-  const glowColor = blocked ? "rgba(239,68,68,0.3)" : "rgba(0,200,5,0.3)";
-
+  const color = blocked ? "#ef4444" : "#06b6d4";
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-20" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id={`grad-${blocked}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
-          <stop offset="100%" stopColor={color} stopOpacity="0.02" />
-        </linearGradient>
-        <filter id={`glow-${blocked}`}>
-          <feGaussianBlur stdDeviation="2" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-      {/* Area fill */}
-      <polygon
-        points={`${padding},${height - padding} ${points} ${width - padding},${height - padding}`}
-        fill={`url(#grad-${blocked})`}
-      />
-      {/* Line */}
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-16 h-7 shrink-0" preserveAspectRatio="none">
       <polyline
-        points={points}
+        points={pts}
         fill="none"
         stroke={color}
         strokeWidth="1.5"
-        filter={`url(#glow-${blocked})`}
-      />
-      {/* Threshold line */}
-      <line
-        x1={padding}
-        y1={height / 2}
-        x2={width - padding}
-        y2={height / 2}
-        stroke={glowColor}
-        strokeWidth="0.5"
-        strokeDasharray="4,4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
 }
 
-function TradeRow({ trade }: { trade: TradeAttempt }) {
+function TradeRow({
+  trade,
+  onShowAlert,
+}: {
+  trade: TradeAttempt;
+  onShowAlert?: (trade: TradeAttempt) => void;
+}) {
   const isBlocked = trade.status === "blocked";
-  const rowClass = isBlocked ? "border-red-500/20 hover:border-red-500/40" : "border-primary/20 hover:border-primary/40";
+  const pctUsed = Math.min(100, (trade.varianceBps / trade.thresholdBps) * 100);
 
   return (
-    <div className={`glass-card p-4 mb-3 border ${rowClass} transition-all ${isBlocked ? "flash-red" : ""}`}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <span className="text-base font-mono font-bold text-slate-200">{trade.asset}</span>
-          <StatusBadge status={trade.status} />
+    <div
+      onClick={() => isBlocked && onShowAlert?.(trade)}
+      className={`px-5 py-4 border-b border-slate-800/50 last:border-0 transition-colors ${
+        isBlocked
+          ? "cursor-pointer hover:bg-red-500/5 flash-red"
+          : "hover:bg-slate-800/20"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          {/* Asset + status */}
+          <div className="flex items-center gap-3 mb-2.5">
+            <StatusBadge status={trade.status} />
+            <span className="font-mono font-bold text-slate-100 text-sm tracking-wide">{trade.asset}</span>
+            <span className="text-xs text-slate-500 font-mono">{trade.value}</span>
+          </div>
+
+          {/* Variance bar */}
+          <div className="flex items-center gap-3">
+            <div className="w-32 h-px rounded-full bg-slate-800">
+              <div
+                className={`h-px rounded-full ${isBlocked ? "bg-red-500" : "bg-cyan-500"}`}
+                style={{ width: `${pctUsed}%` }}
+              />
+            </div>
+            <span className={`text-[10px] font-mono tabular-nums ${isBlocked ? "text-red-400" : "text-cyan-400"}`}>
+              {trade.varianceBps.toLocaleString()}
+              <span className="text-slate-700"> / {trade.thresholdBps} bps</span>
+            </span>
+          </div>
+
+          {/* Error or TX */}
+          {isBlocked && (
+            <p className="mt-2 text-[10px] font-mono text-red-500/60">
+              VolatilityExceedsThreshold({trade.varianceBps}, {trade.thresholdBps})
+              {trade.txHash && (
+                <a
+                  href={`https://sepolia.arbiscan.io/tx/${trade.txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="ml-3 text-slate-700 hover:text-cyan-400 transition-colors"
+                >
+                  {trade.txHash.slice(0, 12)}… ↗
+                </a>
+              )}
+            </p>
+          )}
+          {!isBlocked && trade.txHash && (
+            <a
+              href={`https://sepolia.arbiscan.io/tx/${trade.txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1.5 inline-block text-[10px] font-mono text-slate-700 hover:text-cyan-400 transition-colors"
+            >
+              {trade.txHash.slice(0, 12)}… ↗
+            </a>
+          )}
         </div>
-        <span className="text-xs text-slate-500 font-mono">
-          {new Date(trade.timestamp).toLocaleTimeString()}
-        </span>
+
+        {/* Time + sparkline */}
+        <div className="flex flex-col items-end gap-1.5 shrink-0">
+          <span className="text-[10px] font-mono text-slate-600 tabular-nums">
+            {new Date(trade.timestamp).toLocaleTimeString()}
+          </span>
+          <SparkLine prices={trade.prices} blocked={isBlocked} />
+        </div>
       </div>
-
-      <PriceChart prices={trade.prices} blocked={isBlocked} />
-
-      <div className="grid grid-cols-3 gap-3 mt-3">
-        <div>
-          <p className="text-[10px] text-slate-600 uppercase">Variance</p>
-          <p className={`text-sm font-mono font-semibold ${isBlocked ? "text-red-400" : "text-primary"}`}>
-            {trade.varianceBps.toLocaleString()} bps
-          </p>
-        </div>
-        <div>
-          <p className="text-[10px] text-slate-600 uppercase">Threshold</p>
-          <p className="text-sm font-mono text-slate-400">{trade.thresholdBps} bps</p>
-        </div>
-        <div>
-          <p className="text-[10px] text-slate-600 uppercase">Value</p>
-          <p className="text-sm font-mono text-slate-300">{trade.value}</p>
-        </div>
-      </div>
-
-      {isBlocked && (
-        <div className="mt-3 p-2 rounded-lg bg-red-500/5 border border-red-500/20">
-          <p className="text-[11px] font-mono text-red-400 break-all">
-            <span className="text-red-500 font-bold">Custom Error:</span>{" "}
-            VolatilityExceedsThreshold({trade.varianceBps}, {trade.thresholdBps})
-          </p>
-        </div>
-      )}
-
-      {trade.txHash && (
-        <div className="mt-2 text-[10px] font-mono text-slate-600 flex items-center justify-between border-t border-slate-900 pt-2">
-          <span>TX: {trade.txHash.slice(0, 18)}...</span>
-          <a
-            href={`https://sepolia.arbiscan.io/tx/${trade.txHash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline flex items-center gap-0.5"
-          >
-            Verify
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          </a>
-        </div>
-      )}
     </div>
   );
 }
 
 function AgentTerminal({ trades }: { trades: TradeAttempt[] }) {
-  const terminalLines: Array<{ text: string; type: "cmd" | "info" | "warn" | "error" | "success" }> = [
+  const lines: Array<{ text: string; type: "cmd" | "info" | "warn" | "error" | "success" }> = [
     { text: "$ veto-agent --mode live --monitor", type: "cmd" },
     { text: "[Agent] Connected to RPC. Synchronizing contract states...", type: "info" },
   ];
 
   trades.forEach((trade) => {
     if (trade.status === "blocked") {
-      terminalLines.push(
-        { text: `[Agent] Market anomaly detected: ${trade.asset} shows high-yield activity`, type: "warn" },
-        { text: `[Agent] Decision: Attempting token swap for ${trade.asset}`, type: "warn" },
-        { text: `[Agent] Fetched ${trade.prices.length} prices. Sending trade proposal transaction...`, type: "info" },
-        { text: `[RiskEngine] Variance computed: ${trade.varianceBps} bps. Limit: ${trade.thresholdBps} bps`, type: "info" },
-        { text: `[BLOCK] REVERTED: VolatilityExceedsThreshold(${trade.varianceBps}, ${trade.thresholdBps})`, type: "error" },
-        { text: `[RiskEngine] Trade BLOCKED. Transaction hash: ${trade.txHash}`, type: "error" }
+      lines.push(
+        { text: `[Agent] Anomaly: ${trade.asset} shows high-yield activity`, type: "warn" },
+        { text: `[Agent] Attempting swap for ${trade.asset}`, type: "warn" },
+        { text: `[Agent] ${trade.prices.length} prices fetched. Submitting tx...`, type: "info" },
+        { text: `[RiskEngine] Variance: ${trade.varianceBps} bps | Limit: ${trade.thresholdBps} bps`, type: "info" },
+        { text: `[REVERT] VolatilityExceedsThreshold(${trade.varianceBps}, ${trade.thresholdBps})`, type: "error" },
+        { text: `[BLOCKED] TX: ${trade.txHash.slice(0, 18)}...`, type: "error" }
       );
     } else {
-      terminalLines.push(
-        { text: `[Agent] Consistent yield opportunity: Staking ${trade.asset}`, type: "info" },
-        { text: `[Agent] Decision: Allocate capital to staking vault`, type: "info" },
-        { text: `[Agent] Fetched ${trade.prices.length} prices. Sending trade execution...`, type: "info" },
-        { text: `[RiskEngine] Variance computed: ${trade.varianceBps} bps. Limit: ${trade.thresholdBps} bps`, type: "info" },
-        { text: `[PASS] EXECUTED: On-chain transaction executed successfully`, type: "success" },
-        { text: `[RiskEngine] Trade APPROVED. Transaction hash: ${trade.txHash}`, type: "success" }
+      lines.push(
+        { text: `[Agent] Stable yield: ${trade.asset}`, type: "info" },
+        { text: `[Agent] Allocating capital to staking vault`, type: "info" },
+        { text: `[Agent] ${trade.prices.length} prices fetched. Submitting tx...`, type: "info" },
+        { text: `[RiskEngine] Variance: ${trade.varianceBps} bps | Limit: ${trade.thresholdBps} bps`, type: "info" },
+        { text: `[PASS] Trade approved and executed`, type: "success" },
+        { text: `[EXEC] TX: ${trade.txHash.slice(0, 18)}...`, type: "success" }
       );
     }
   });
 
-  const typeColors = {
-    cmd: "text-primary",
-    info: "text-slate-500",
-    warn: "text-amber-400",
-    error: "text-red-400",
-    success: "text-primary",
+  const colors: Record<string, string> = {
+    cmd:     "text-cyan-400",
+    info:    "text-slate-500",
+    warn:    "text-amber-400",
+    error:   "text-red-400",
+    success: "text-cyan-400",
   };
 
   return (
-    <div className="glass-card p-4 h-full">
-      <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-800">
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-red-500/80" />
-            <div className="w-3 h-3 rounded-full bg-amber-500/80" />
-            <div className="w-3 h-3 rounded-full bg-primary/80" />
-          </div>
-          <span className="text-xs text-slate-600 font-mono ml-2">agent@veto ~ python agent.py</span>
+    <div className="h-full flex flex-col">
+      {/* Terminal chrome */}
+      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-800/60 bg-slate-900/40 shrink-0">
+        <div className="flex gap-1">
+          <span className="w-2.5 h-2.5 rounded-full bg-slate-700" />
+          <span className="w-2.5 h-2.5 rounded-full bg-slate-700" />
+          <span className="w-2.5 h-2.5 rounded-full bg-slate-700" />
         </div>
-        <div className="flex items-center gap-1 text-[10px] text-slate-500 font-mono">
-          <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping" />
-          <span>LISTENING</span>
+        <span className="text-[10px] font-mono text-slate-600 flex-1 ml-1">agent@veto ~ python agent.py</span>
+        <div className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+          <span className="text-[10px] font-mono text-slate-600">LIVE</span>
         </div>
       </div>
-      <div className="space-y-1 overflow-y-auto max-h-[500px] h-[450px]">
-        {terminalLines.map((line, i) => (
-          <p key={i} className={`text-xs font-mono leading-relaxed ${typeColors[line.type]}`}>
+
+      {/* Output */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-0.5">
+        {lines.map((line, i) => (
+          <p key={i} className={`text-[11px] font-mono leading-relaxed ${colors[line.type]}`}>
             {line.text}
           </p>
         ))}
-        <p className="text-xs font-mono text-primary animate-pulse mt-2">▌</p>
+        <p className="text-[11px] font-mono text-cyan-400 animate-pulse mt-1">▌</p>
       </div>
     </div>
   );
@@ -307,6 +230,15 @@ export default function Dashboard() {
     vaultAddress: "",
     rpcUrl: "",
   });
+  const [showBlockedModal, setShowBlockedModal] = useState(false);
+  const [blockedModalData, setBlockedModalData] = useState<{
+    computed: number;
+    limit: number;
+    asset: string;
+    value: string;
+    timestamp: string;
+    txHash: string;
+  } | null>(null);
 
   const fetchVaultData = useCallback(async () => {
     try {
@@ -327,8 +259,9 @@ export default function Dashboard() {
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
-        // Sort trades by timestamp descending
-        const sorted = [...data].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        const sorted = [...data].sort(
+          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
         setTrades(sorted);
       }
     } catch (e) {
@@ -337,16 +270,12 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    // Initial fetch deferred to next tick to avoid synchronous setState inside useEffect
     const initTimeout = setTimeout(() => {
       fetchVaultData();
       fetchTradesData();
     }, 0);
-
-    // Set intervals
     const statsInterval = setInterval(fetchVaultData, 5000);
     const tradesInterval = setInterval(fetchTradesData, 5000);
-
     return () => {
       clearTimeout(initTimeout);
       clearInterval(statsInterval);
@@ -357,250 +286,399 @@ export default function Dashboard() {
   const handleSimulateBlock = useCallback(() => {
     setShaking(true);
     setTimeout(() => setShaking(false), 500);
-  }, []);
+
+    const txHash =
+      "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+    const mockTrade: TradeAttempt = {
+      id: Date.now(),
+      asset: "RUGCOIN",
+      status: "blocked",
+      varianceBps: 2450,
+      thresholdBps: vaultStats.threshold,
+      value: "2.50 ETH",
+      timestamp: new Date().toISOString(),
+      prices: [1200, 1250, 1100, 950, 800, 750, 680, 590, 520, 480],
+      txHash,
+    };
+
+    setTrades((prev) => [mockTrade, ...prev]);
+    setBlockedModalData({
+      computed: 2450,
+      limit: vaultStats.threshold,
+      asset: "RUGCOIN",
+      value: "2.50 ETH",
+      timestamp: mockTrade.timestamp,
+      txHash,
+    });
+    setShowBlockedModal(true);
+  }, [vaultStats.threshold]);
 
   const blockedCount = trades.filter((t) => t.status === "blocked").length;
 
+  const stats = [
+    { label: "Vault Balance",      value: `${vaultStats.balance} ETH`, sub: "RPC live state",    color: "text-cyan-400"  },
+    { label: "Trades Executed",    value: vaultStats.executed,          sub: "Within threshold",   color: "text-cyan-400"  },
+    { label: "Trades Blocked",     value: blockedCount,                  sub: "Variance exceeded",  color: "text-red-400"   },
+    { label: "Capital Protected",  value: `${(blockedCount * 2.0).toFixed(1)} ETH`, sub: "Est. from blocks", color: "text-amber-400" },
+  ];
+
+  const archNodes = [
+    { label: "AI Agent",     tech: "Python / web3.py", color: "text-amber-400", highlight: false },
+    { label: "Vault",        tech: "Solidity / EVM",   color: "text-cyan-400",  highlight: false },
+    { label: "Risk Engine",  tech: "Rust / WASM",      color: "text-cyan-400",  highlight: true  },
+  ];
+
+  const gasBenchmark = [
+    ["50 prices",  "142,160", "~14,200", "~90%"],
+    ["100 prices", "211,246", "~21,100", "~90%"],
+    ["200 prices", "349,673", "~35,000", "~90%"],
+  ];
+
   return (
-    <div className={`scanline min-h-screen ${shaking ? "shake" : ""}`}>
-      {/* Header */}
-      <header className="border-b border-slate-800/50 bg-slate-950/80 backdrop-blur-xl sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div className={`scanline min-h-screen bg-slate-950 ${shaking ? "shake" : ""}`}>
+
+      {/* ── Header ──────────────────────────────────────────── */}
+      <header className="sticky top-0 z-40 h-14 border-b border-slate-800/60 bg-slate-950/90 backdrop-blur-xl">
+        <div className="max-w-screen-xl mx-auto h-full px-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="relative group">
-              <div className="absolute inset-0.5 bg-linear-to-r from-primary to-emerald-500 rounded-xl blur-xs opacity-50 group-hover:opacity-100 transition-opacity duration-300 animate-pulse" />
-              <Link href="/" className="relative w-10 h-10 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 hover:border-primary/50 transition-all duration-300">
-                <svg className="w-5 h-5 text-primary transition-transform group-hover:rotate-12 duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </Link>
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <Link href="/" className="hover:opacity-90">
-                  <h1 className="text-xl font-black tracking-widest uppercase">
-                    <span className="text-primary">VE</span><span className="text-danger">TO</span>
-                  </h1>
-                </Link>
-                <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-red-500/10 text-red-400 border border-red-500/20 tracking-wider uppercase">WASM Shield</span>
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="relative shrink-0">
+                <div className="absolute inset-0.5 bg-gradient-to-r from-cyan-500 to-cyan-400 rounded-xl blur-sm opacity-40 group-hover:opacity-80 transition-opacity duration-300 animate-pulse" />
+                <div className="relative w-10 h-10 rounded-xl bg-slate-950 border border-slate-800 group-hover:border-cyan-500/50 flex items-center justify-center shadow-lg shadow-cyan-500/20 hover:scale-105 transition-all duration-300">
+                  <svg className="w-5 h-5 text-cyan-400 group-hover:rotate-12 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
               </div>
-              <p className="text-[10px] text-slate-600 uppercase tracking-widest">WASM Risk Engine • Robinhood Chain</p>
+              <div>
+                <span className="font-mono font-black text-slate-100 text-sm tracking-widest">VETO</span>
+                <p className="text-[9px] font-mono text-slate-600 uppercase tracking-wider leading-none mt-0.5">Risk Engine</p>
+              </div>
+            </Link>
+
+            <div className="h-4 w-px bg-slate-800 hidden sm:block" />
+
+            <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-slate-600">
+              <span>Security Console</span>
+              <span className="text-slate-800">/</span>
+              <span className="text-slate-400">Live Monitor</span>
             </div>
           </div>
-          <div className="flex items-center gap-6">
-            <Link href="/" className="text-xs text-slate-500 hover:text-primary transition-colors font-mono hidden sm:inline-flex items-center gap-1">
+
+          <div className="flex items-center gap-5">
+            <div className="flex items-center gap-2">
+              <span className="status-dot status-dot-live" />
+              <span className="text-xs font-mono text-cyan-400 font-bold tracking-wider">LIVE</span>
+            </div>
+
+            {vaultStats.vaultAddress && (
+              <div className="hidden md:flex items-center gap-1.5 text-[10px] font-mono text-slate-700">
+                <span>Vault</span>
+                <span className="text-slate-500 select-all">
+                  {vaultStats.vaultAddress.slice(0, 6)}…{vaultStats.vaultAddress.slice(-4)}
+                </span>
+              </div>
+            )}
+
+            <Link
+              href="/"
+              className="hidden sm:flex items-center gap-1 text-xs font-mono text-slate-500 hover:text-cyan-400 transition-colors"
+            >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               Home
             </Link>
-            <div className="flex flex-col items-end gap-1">
-              <div className="flex items-center gap-2">
-                <span className="status-dot status-dot-live" />
-                <span className="text-xs text-primary font-mono font-bold">CONNECTED LIVE</span>
-              </div>
-              {vaultStats.vaultAddress && (
-                <div className="flex flex-col items-end text-right">
-                  <span className="text-[9px] text-slate-500 font-mono">
-                    Vault: <span className="text-slate-400 select-all">{vaultStats.vaultAddress.slice(0, 6)}...{vaultStats.vaultAddress.slice(-4)}</span>
-                  </span>
-                  {vaultStats.riskEngineAddress && (
-                    <span className="text-[9px] text-slate-500 font-mono">
-                      Risk Sandbox: <span className="text-slate-400 select-all">{vaultStats.riskEngineAddress.slice(0, 6)}...{vaultStats.riskEngineAddress.slice(-4)}</span>
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatCard
-            label="Vault Balance"
-            value={`${vaultStats.balance} ETH`}
-            accent="primary"
-            subtitle="Live RPC State"
-            delayClass="delay-100"
-          />
-          <StatCard
-            label="Trades Executed"
-            value={vaultStats.executed}
-            accent="green"
-            subtitle="Within threshold"
-            delayClass="delay-200"
-          />
-          <StatCard
-            label="Trades Blocked"
-            value={blockedCount}
-            accent="red"
-            subtitle="Variance exceeded"
-            delayClass="delay-300"
-          />
-          <StatCard
-            label="Funds Saved"
-            value={`${(blockedCount * 2.0).toFixed(1)} ETH`}
-            accent="amber"
-            subtitle="Est. Volatility Saved"
-            delayClass="delay-400"
-          />
+      <div className="max-w-screen-xl mx-auto px-6">
+
+        {/* ── Stats + Controls ────────────────────────────── */}
+        <div className="py-6 border-b border-slate-800/50">
+          <div className="flex flex-wrap items-end gap-8">
+            {/* KPI cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-4 flex-1 min-w-0">
+              {stats.map((s) => (
+                <div key={s.label}>
+                  <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-slate-600 mb-1.5">{s.label}</p>
+                  <p className={`text-2xl font-mono font-bold tabular-nums leading-none ${s.color}`}>
+                    {s.value}
+                  </p>
+                  <p className="text-[10px] text-slate-700 mt-1 font-mono">{s.sub}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Divider */}
+            <div className="hidden lg:block w-px h-14 bg-slate-800 self-center" />
+
+            {/* Threshold + Simulate */}
+            <div className="flex items-center gap-6 shrink-0">
+              <div>
+                <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-slate-600 mb-1.5">Risk Threshold</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-28 h-px rounded-full bg-slate-800">
+                    <div
+                      className="h-px rounded-full bg-cyan-500 transition-all duration-500"
+                      style={{ width: `${(vaultStats.threshold / 5000) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-2xl font-mono font-bold text-cyan-400 tabular-nums leading-none">
+                    {vaultStats.threshold}
+                  </span>
+                  <span className="text-xs font-mono text-slate-600">bps</span>
+                </div>
+                <p className="text-[10px] text-slate-700 mt-1 font-mono">
+                  {(vaultStats.threshold / 100).toFixed(1)}% max variance
+                </p>
+              </div>
+
+              <button
+                onClick={handleSimulateBlock}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-red-500/20 bg-red-500/5 text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-colors text-xs font-mono shrink-0"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Simulate Block
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Threshold Control */}
-        <div className="glass-card border-gradient p-5 mb-8 animate-fade-in-up delay-400">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h2 className="text-sm font-semibold text-slate-300">Human Control Panel</h2>
-              <p className="text-xs text-slate-600">On-chain Maximum Acceptable Asset Variance (BPS)</p>
+        {/* ── Trade Log + Terminal ─────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] xl:grid-cols-[1fr_400px] gap-6 py-6 border-b border-slate-800/50">
+
+          {/* Trade Activity */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                Trade Activity
+              </h2>
+              <span className="text-[10px] font-mono text-slate-700">{trades.length} events</span>
             </div>
-            <button
-              onClick={handleSimulateBlock}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-mono rounded-lg bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 transition-colors cursor-pointer"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+
+            <div className="border border-slate-800 rounded-xl overflow-hidden divide-y divide-slate-800/50">
+              {trades.length === 0 ? (
+                <div className="px-5 py-10 text-center">
+                  <p className="text-sm text-slate-700 font-mono">Waiting for agent trade proposals…</p>
+                </div>
+              ) : (
+                trades.map((trade) => (
+                  <TradeRow
+                    key={trade.id}
+                    trade={trade}
+                    onShowAlert={(t) => {
+                      setBlockedModalData({
+                        computed: t.varianceBps,
+                        limit: t.thresholdBps,
+                        asset: t.asset,
+                        value: t.value,
+                        timestamp: t.timestamp,
+                        txHash: t.txHash,
+                      });
+                      setShowBlockedModal(true);
+                    }}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Agent Terminal */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <h2 className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 pulse-glow" />
+                Agent Output
+              </h2>
+            </div>
+
+            <div className="border border-slate-800 rounded-xl overflow-hidden" style={{ height: 480 }}>
+              <AgentTerminal trades={trades} />
+            </div>
+          </div>
+        </div>
+
+        {/* ── Architecture + Gas ───────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-slate-800/50 py-6">
+
+          {/* Architecture */}
+          <div className="lg:pr-8">
+            <h2 className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500 mb-5">Architecture</h2>
+            <div className="flex flex-wrap items-center gap-3">
+              {archNodes.map((node, i) => (
+                <Fragment key={node.label}>
+                  <div
+                    className={`flex flex-col gap-0.5 px-4 py-3 rounded-lg border ${
+                      node.highlight
+                        ? "border-cyan-500/20 bg-cyan-500/5"
+                        : "border-slate-800 bg-slate-900/40"
+                    }`}
+                  >
+                    <span className="text-[9px] font-mono uppercase tracking-widest text-slate-600">
+                      {node.label}
+                    </span>
+                    <span className={`text-sm font-mono font-bold ${node.color}`}>{node.tech}</span>
+                  </div>
+                  {i < archNodes.length - 1 && (
+                    <svg className="w-4 h-4 text-slate-700 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  )}
+                </Fragment>
+              ))}
+
+              <svg className="w-4 h-4 text-slate-700 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
-              Simulate Block
-            </button>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex-1 h-1.5 rounded-full bg-slate-800 relative">
-              <div
-                className="absolute h-full rounded-full bg-primary"
-                style={{ width: `${(vaultStats.threshold / 5000) * 100}%` }}
-              />
-            </div>
-            <div className="text-right min-w-[120px]">
-              <span className="text-xl font-mono font-bold text-primary">{vaultStats.threshold}</span>
-              <span className="text-xs text-slate-600 ml-1">bps</span>
-              <p className="text-[10px] text-slate-600">{(vaultStats.threshold / 100).toFixed(1)}% max variance</p>
-            </div>
-          </div>
-        </div>
 
-        {/* Split View: Trade History + Agent Terminal */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up delay-400">
-          {/* Left: Trade History */}
-          <div>
-            <h2 className="text-sm font-semibold text-slate-400 mb-4 uppercase tracking-wider flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-primary" />
-              Trade Execution Log
-            </h2>
-            {trades.length === 0 ? (
-              <p className="text-sm text-slate-600 italic font-mono p-4">Waiting for agent trade proposals...</p>
-            ) : (
-              trades.map((trade) => <TradeRow key={trade.id} trade={trade} />)
-            )}
-          </div>
-
-          {/* Right: Agent Terminal */}
-          <div>
-            <h2 className="text-sm font-semibold text-slate-400 mb-4 uppercase tracking-wider flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-primary pulse-glow" />
-              Agent Execution Terminal
-            </h2>
-            <AgentTerminal trades={trades} />
-          </div>
-        </div>
-
-        {/* Architecture Diagram */}
-        <div className="glass-card border-gradient p-6 mt-8 animate-fade-in-up delay-400">
-          <h2 className="text-sm font-semibold text-slate-400 mb-4 uppercase tracking-wider">Architecture</h2>
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 text-center">
-            <div className="glass-card p-4 min-w-[160px]">
-              <p className="text-xs text-slate-600 uppercase mb-1">AI Agent</p>
-              <p className="text-sm font-mono text-amber-400 font-semibold">Python Agent</p>
-              <p className="text-[10px] text-slate-600 mt-1">Fetches prices</p>
-              <p className="text-[10px] text-slate-600">Signs transactions</p>
-            </div>
-            <span className="text-primary text-xl font-mono">&rarr;</span>
-            <div className="glass-card p-4 min-w-[160px] border-primary/30">
-              <p className="text-xs text-slate-600 uppercase mb-1">Vault</p>
-              <p className="text-sm font-mono text-primary font-semibold">Solidity EVM</p>
-              <p className="text-[10px] text-slate-600 mt-1">Holds funds</p>
-              <p className="text-[10px] text-slate-600">Access control</p>
-            </div>
-            <span className="text-primary text-xl font-mono">&rarr;</span>
-            <div className="glass-card p-4 min-w-[160px] glow-primary border-primary/20">
-              <p className="text-xs text-slate-600 uppercase mb-1">Risk Engine</p>
-              <p className="text-sm font-mono text-primary font-bold">Rust / Stylus</p>
-              <p className="text-[10px] text-slate-600 mt-1">WASM math</p>
-              <p className="text-[10px] text-slate-600">Variance computation</p>
-            </div>
-            <span className="text-slate-600 text-xl font-mono">&rarr;</span>
-            <div className="flex flex-col gap-2">
-              <div className="glass-card p-3 border-primary/30 flex items-center gap-2">
-                <svg className="w-4 h-4 text-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" />
-                </svg>
-                <p className="text-xs font-mono text-primary">PASS &rarr; Execute</p>
-              </div>
-              <div className="glass-card p-3 border-red-500/30 flex items-center gap-2">
-                <svg className="w-4 h-4 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                <p className="text-xs font-mono text-red-400">FAIL &rarr; Revert</p>
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-cyan-500/20 bg-cyan-500/5">
+                  <svg className="w-3 h-3 text-cyan-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-[10px] font-mono text-cyan-400">PASS → Execute</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-red-500/20 bg-red-500/5">
+                  <svg className="w-3 h-3 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  <span className="text-[10px] font-mono text-red-400">FAIL → Revert</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Gas Benchmark */}
-        <div className="glass-card border-gradient p-6 mt-6 animate-fade-in-up delay-400">
-          <h2 className="text-sm font-semibold text-slate-400 mb-4 uppercase tracking-wider">
-            Gas Benchmark — Stylus vs Solidity
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm font-mono">
+          {/* Gas Benchmark */}
+          <div className="lg:pl-8 pt-6 lg:pt-0">
+            <h2 className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500 mb-5">
+              Gas Benchmark — Stylus vs Solidity
+            </h2>
+            <table className="w-full text-xs font-mono">
               <thead>
-                <tr className="border-b border-slate-800">
-                  <th className="text-left py-2 px-3 text-xs text-slate-600 uppercase">Array Size</th>
-                  <th className="text-right py-2 px-3 text-xs text-slate-600 uppercase">Solidity (EVM)</th>
-                  <th className="text-right py-2 px-3 text-xs text-slate-600 uppercase">Stylus (WASM)</th>
-                  <th className="text-right py-2 px-3 text-xs text-slate-600 uppercase">Savings</th>
+                <tr className="border-b border-slate-800/60">
+                  <th className="text-left pb-2.5 font-normal text-slate-600">Array</th>
+                  <th className="text-right pb-2.5 font-normal text-slate-600">Solidity</th>
+                  <th className="text-right pb-2.5 font-normal text-slate-600">Stylus (WASM)</th>
+                  <th className="text-right pb-2.5 font-normal text-slate-600">Savings</th>
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors">
-                  <td className="py-2.5 px-3 text-slate-400">50 prices</td>
-                  <td className="py-2.5 px-3 text-right text-red-400">142,160 gas</td>
-                  <td className="py-2.5 px-3 text-right text-primary">~14,200 gas</td>
-                  <td className="py-2.5 px-3 text-right text-primary">~90%</td>
-                </tr>
-                <tr className="border-b border-slate-800/50 hover:bg-slate-800/20 transition-colors">
-                  <td className="py-2.5 px-3 text-slate-400">100 prices</td>
-                  <td className="py-2.5 px-3 text-right text-red-400">211,246 gas</td>
-                  <td className="py-2.5 px-3 text-right text-primary">~21,100 gas</td>
-                  <td className="py-2.5 px-3 text-right text-primary">~90%</td>
-                </tr>
-                <tr className="hover:bg-slate-800/20 transition-colors">
-                  <td className="py-2.5 px-3 text-slate-400">200 prices</td>
-                  <td className="py-2.5 px-3 text-right text-red-400">349,673 gas</td>
-                  <td className="py-2.5 px-3 text-right text-primary">~35,000 gas</td>
-                  <td className="py-2.5 px-3 text-right text-primary">~90%</td>
-                </tr>
+                {gasBenchmark.map(([size, sol, stylus, savings]) => (
+                  <tr key={size} className="border-b border-slate-800/30 last:border-0">
+                    <td className="py-2.5 text-slate-500">{size}</td>
+                    <td className="py-2.5 text-right text-red-400/70 tabular-nums">{sol}</td>
+                    <td className="py-2.5 text-right text-cyan-400/70 tabular-nums">{stylus}</td>
+                    <td className="py-2.5 text-right text-cyan-400 font-bold">{savings}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
+            <p className="text-[9px] text-slate-700 mt-3 leading-relaxed font-mono">
+              Solidity gas via Foundry. Stylus estimates based on documented 10× compute savings on Robinhood Chain.
+            </p>
           </div>
-          <p className="text-[10px] text-slate-600 mt-3">
-            Solidity gas measured via Foundry. Stylus estimates based on documented 10&times; compute savings.
-            Final WASM benchmarks will be run on Robinhood Chain testnet.
-          </p>
         </div>
 
-        {/* Footer */}
-        <footer className="mt-12 pb-8 text-center">
-          <p className="text-xs text-slate-700 font-mono">
-            Veto • Arbitrum Open House London 2026 • Robinhood Chain
+        {/* ── Footer ──────────────────────────────────────── */}
+        <footer className="py-5 border-t border-slate-800/50 flex items-center justify-between">
+          <p className="text-[10px] font-mono text-slate-700">
+            Veto · Arbitrum Open House London 2026 · Robinhood Chain
           </p>
-          <p className="text-[10px] text-slate-800 mt-1 italic">
+          <p className="text-[10px] font-mono text-slate-800 italic hidden sm:block">
             &quot;Your AI tried. Veto said no.&quot;
           </p>
         </footer>
-      </main>
+      </div>
+
+      {/* ── Blocked Modal ────────────────────────────────────── */}
+      {showBlockedModal && blockedModalData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-md mx-4 bg-slate-900 border border-red-500/25 rounded-2xl shadow-2xl shadow-red-500/10 overflow-hidden animate-fade-in-up">
+            {/* Red accent bar */}
+            <div className="h-0.5 w-full bg-red-500/60" />
+
+            <div className="p-6">
+              {/* Title */}
+              <div className="flex items-center gap-3 mb-5">
+                <div className="relative shrink-0">
+                  <span className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-20" />
+                  <div className="relative w-9 h-9 rounded-full bg-red-500/10 border border-red-500/25 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-sm font-mono font-bold text-red-400 uppercase tracking-widest">
+                    Veto Intercept
+                  </h3>
+                  <p className="text-[9px] font-mono text-slate-600 uppercase tracking-wider mt-0.5">
+                    Transaction Reverted On-Chain
+                  </p>
+                </div>
+              </div>
+
+              {/* Error code */}
+              <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 mb-5 font-mono text-xs">
+                <span className="text-red-400">VolatilityExceedsThreshold</span>
+                <span className="text-slate-400">({blockedModalData.computed}, {blockedModalData.limit})</span>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-3">
+                  <p className="text-[8px] font-mono uppercase tracking-widest text-slate-600 mb-1.5">
+                    Computed Variance
+                  </p>
+                  <p className="text-2xl font-mono font-bold text-red-400 tabular-nums leading-none">
+                    {blockedModalData.computed}
+                  </p>
+                  <p className="text-[9px] font-mono text-slate-700 mt-1">basis points</p>
+                </div>
+                <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-3">
+                  <p className="text-[8px] font-mono uppercase tracking-widest text-slate-600 mb-1.5">
+                    Threshold Limit
+                  </p>
+                  <p className="text-2xl font-mono font-bold text-slate-300 tabular-nums leading-none">
+                    {blockedModalData.limit}
+                  </p>
+                  <p className="text-[9px] font-mono text-slate-700 mt-1">basis points</p>
+                </div>
+              </div>
+
+              {/* Description */}
+              <p className="text-xs text-slate-500 leading-relaxed mb-4 font-mono">
+                Trade for{" "}
+                <span className="text-slate-200 font-bold">{blockedModalData.asset}</span>{" "}
+                ({blockedModalData.value}) intercepted. Variance{" "}
+                <span className="text-red-400">{blockedModalData.computed} bps</span> exceeds the{" "}
+                <span className="text-slate-300">{(blockedModalData.limit / 100).toFixed(1)}%</span> limit.
+                Capital remains in VetoVault.
+              </p>
+
+              {/* TX hash */}
+              <div className="font-mono text-[10px] text-slate-700 bg-slate-950/40 border border-slate-800/50 rounded-lg p-3 mb-5 break-all select-all">
+                {blockedModalData.txHash}
+              </div>
+
+              <button
+                onClick={() => {
+                  setShowBlockedModal(false);
+                  setBlockedModalData(null);
+                }}
+                className="w-full py-2.5 rounded-xl border border-slate-800 bg-slate-950/60 text-slate-400 hover:text-slate-200 hover:border-slate-700 transition-colors font-mono text-xs tracking-wider"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
