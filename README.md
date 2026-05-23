@@ -26,7 +26,7 @@
 ## 📸 See it in Action
 
 <div align="center">
-  <img src="docs/readme.png" alt="Veto Demo" width="100%">
+  <img src="dashboard/public/og-image.png" alt="Veto Demo" width="100%">
 </div>
 
 > **AI agent spots a 10× APY rugcoin pool → submits trade → Stylus RiskEngine computes variance → REVERTED.** Funds saved. Human still in control.
