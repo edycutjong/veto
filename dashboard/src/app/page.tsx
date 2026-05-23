@@ -205,8 +205,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-8">
 
           {/* Logo */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/25">
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/25">
               <ShieldIcon className="w-4 h-4 text-white" />
             </div>
             <span className="font-display text-base font-black tracking-widest">
@@ -233,7 +233,7 @@ export default function LandingPage() {
           {/* CTA */}
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-slate-950 text-[11px] font-display font-black tracking-wider hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02] flex-shrink-0"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-slate-950 text-[11px] font-display font-black tracking-wider hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02] shrink-0"
           >
             Enter Console
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -244,14 +244,14 @@ export default function LandingPage() {
       </header>
 
       {/* ── Hero ──────────────────────────────────────────────── */}
-      <main className="relative z-10 max-w-7xl mx-auto w-full px-6 pt-20 pb-20 flex-grow grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24 items-center">
+      <main className="relative z-10 max-w-7xl mx-auto w-full px-6 pt-20 pb-20 grow grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24 items-center">
 
         {/* Left: Copy */}
         <section className="flex flex-col items-start animate-fade-in-up">
 
           {/* Pill */}
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse flex-shrink-0" />
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shrink-0" />
             <span className="text-[10px] text-slate-400 font-mono tracking-widest uppercase">
               Arbitrum Open House London 2026
             </span>
@@ -262,7 +262,7 @@ export default function LandingPage() {
             <span className="block text-slate-500 text-xl sm:text-2xl font-normal tracking-normal mb-4 leading-snug">
               Your AI agent tried to<br className="hidden sm:block" /> execute a volatile trade.
             </span>
-            <span className="block font-display text-5xl sm:text-6xl lg:text-7xl tracking-tighter bg-gradient-to-br from-red-400 via-orange-300 to-primary bg-clip-text text-transparent drop-shadow-[0_0_50px_rgba(0,200,5,0.15)]">
+            <span className="block font-display text-5xl sm:text-6xl lg:text-7xl tracking-tighter bg-linear-to-br from-red-400 via-orange-300 to-primary bg-clip-text text-transparent drop-shadow-[0_0_50px_rgba(0,200,5,0.15)]">
               Veto Said No.
             </span>
           </h1>
@@ -457,8 +457,8 @@ export default function LandingPage() {
             {terminalLogs.length === 0 ? (
               <span className="text-slate-700">$ _  Select an asset and run dry-run...</span>
             ) : (
-              terminalLogs.map( /* istanbul ignore next */ (log, i) => {
-                return <div key={i} className={getLogClass(log)}>{log}</div>;
+              terminalLogs.map((log, i) => {
+                return React.createElement("div", { key: i, className: getLogClass(log) }, log);
               })
             )}
             {isRunning && <span className="text-primary animate-pulse">▌</span>}
@@ -478,12 +478,12 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 relative">
 
             {/* Horizontal connector */}
-            <div className="hidden md:block absolute top-14 left-[calc(33.33%+2rem)] right-[calc(33.33%+2rem)] h-px bg-gradient-to-r from-amber-500/20 via-primary/30 to-primary/20" />
+            <div className="hidden md:block absolute top-14 left-[calc(33.33%+2rem)] right-[calc(33.33%+2rem)] h-px bg-linear-to-r from-amber-500/20 via-primary/30 to-primary/20" />
 
             {/* Step 1 */}
             <div className="flex flex-col items-center text-center px-6">
               <div className="w-28 h-28 rounded-2xl bg-amber-500/5 border border-amber-500/20 flex items-center justify-center mb-6 relative">
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-500/10 to-transparent" />
+                <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-amber-500/10 to-transparent" />
                 <svg className="w-12 h-12 text-amber-400 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
@@ -501,7 +501,7 @@ export default function LandingPage() {
             {/* Step 2 */}
             <div className="flex flex-col items-center text-center px-6">
               <div className="w-28 h-28 rounded-full bg-primary/5 border border-primary/20 flex items-center justify-center mb-6 relative">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/10 to-transparent" />
+                <div className="absolute inset-0 rounded-full bg-linear-to-br from-primary/10 to-transparent" />
                 <ShieldIcon className="w-12 h-12 text-primary relative z-10" />
               </div>
               <div className="flex items-center gap-2 mb-4">
@@ -517,7 +517,7 @@ export default function LandingPage() {
             {/* Step 3 */}
             <div className="flex flex-col items-center text-center px-6">
               <div className="w-28 h-28 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center justify-center mb-6 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-red-500/5" />
+                <div className="absolute inset-0 bg-linear-to-br from-primary/5 to-red-500/5" />
                 <svg className="w-12 h-12 text-slate-400 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
@@ -626,7 +626,7 @@ export default function LandingPage() {
                 key={label}
                 className={`glass-card p-5 flex items-start gap-4 ${accent ? "sm:col-span-1" : "sm:col-span-2"}`}
               >
-                <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${accent ? "bg-primary shadow-[0_0_8px_rgba(0,200,5,0.5)]" : "bg-slate-700"}`} />
+                <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${accent ? "bg-primary shadow-[0_0_8px_rgba(0,200,5,0.5)]" : "bg-slate-700"}`} />
                 <div className="min-w-0">
                   <p className="text-xs text-slate-300 font-semibold mb-0.5">{label}</p>
                   <p className="text-[10px] text-slate-600 font-mono uppercase tracking-wider mb-2">{sublabel}</p>
@@ -650,9 +650,9 @@ export default function LandingPage() {
       <section className="relative z-10 border-t border-slate-900/60 py-32">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <p className="text-[10px] text-slate-600 font-mono tracking-widest uppercase mb-6">Security Console</p>
-          <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tighter mb-5 leading-[1.0]">
+          <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tighter mb-5 leading-none">
             Your AI tried.<br />
-            <span className="bg-gradient-to-r from-red-400 via-orange-300 to-primary bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-red-400 via-orange-300 to-primary bg-clip-text text-transparent">
               Veto said no.
             </span>
           </h2>
@@ -676,7 +676,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
 
           <div className="flex items-center gap-2.5">
-            <div className="w-5 h-5 rounded bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center">
+            <div className="w-5 h-5 rounded bg-linear-to-br from-primary to-emerald-600 flex items-center justify-center">
               <ShieldIcon className="w-3 h-3 text-white" />
             </div>
             <span className="font-display text-xs font-black tracking-widest">

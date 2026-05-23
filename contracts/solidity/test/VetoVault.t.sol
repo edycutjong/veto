@@ -349,6 +349,17 @@ contract VetoVaultTest is Test {
         uint256 variance = riskEngine.computeVariance(prices);
         assertTrue(variance > 0);
     }
+
+    function test_mocks_fallbacks_coverage() public {
+        // Trigger fallback of MockTarget
+        (bool ok, ) = address(target).call("random_calldata");
+        assertTrue(ok);
+
+        // Trigger fallback of RevertingTarget
+        RevertingTarget revTarget = new RevertingTarget();
+        (bool ok2, ) = address(revTarget).call("random_calldata");
+        assertFalse(ok2);
+    }
 }
 
 /**

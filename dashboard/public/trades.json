@@ -1,156 +1,6 @@
 [
   {
     "id": 21,
-    "txHash": "0xmock_blocked_1779469062",
-    "asset": "RUGCOIN",
-    "status": "blocked",
-    "varianceBps": 16666666,
-    "thresholdBps": 1000,
-    "value": "2.0 ETH",
-    "timestamp": "2026-05-22T16:57:42Z",
-    "prices": [
-      1.0,
-      2.0,
-      3.0
-    ]
-  },
-  {
-    "id": 21,
-    "txHash": "0xmock_success_1779469062",
-    "asset": "ETH",
-    "status": "executed",
-    "varianceBps": 6535,
-    "thresholdBps": 1000,
-    "value": "1.0 ETH",
-    "timestamp": "2026-05-22T16:57:42Z",
-    "prices": [
-      1.0,
-      1.01,
-      1.02
-    ]
-  },
-  {
-    "id": 21,
-    "txHash": "0xmock_blocked_1779498965",
-    "asset": "RUGCOIN",
-    "status": "blocked",
-    "varianceBps": 16666666,
-    "thresholdBps": 1000,
-    "value": "2.0 ETH",
-    "timestamp": "2026-05-23T01:16:05Z",
-    "prices": [
-      1.0,
-      2.0,
-      3.0
-    ]
-  },
-  {
-    "id": 21,
-    "txHash": "0xmock_success_1779498965",
-    "asset": "ETH",
-    "status": "executed",
-    "varianceBps": 6535,
-    "thresholdBps": 1000,
-    "value": "1.0 ETH",
-    "timestamp": "2026-05-23T01:16:05Z",
-    "prices": [
-      1.0,
-      1.01,
-      1.02
-    ]
-  },
-  {
-    "id": 21,
-    "txHash": "0xmock_blocked_1779498975",
-    "asset": "RUGCOIN",
-    "status": "blocked",
-    "varianceBps": 16666666,
-    "thresholdBps": 1000,
-    "value": "2.0 ETH",
-    "timestamp": "2026-05-23T01:16:15Z",
-    "prices": [
-      1.0,
-      2.0,
-      3.0
-    ]
-  },
-  {
-    "id": 21,
-    "txHash": "0xmock_success_1779498975",
-    "asset": "ETH",
-    "status": "executed",
-    "varianceBps": 6535,
-    "thresholdBps": 1000,
-    "value": "1.0 ETH",
-    "timestamp": "2026-05-23T01:16:15Z",
-    "prices": [
-      1.0,
-      1.01,
-      1.02
-    ]
-  },
-  {
-    "id": 21,
-    "txHash": "0xmock_blocked_1779499017",
-    "asset": "RUGCOIN",
-    "status": "blocked",
-    "varianceBps": 16666666,
-    "thresholdBps": 1000,
-    "value": "2.0 ETH",
-    "timestamp": "2026-05-23T01:16:57Z",
-    "prices": [
-      1.0,
-      2.0,
-      3.0
-    ]
-  },
-  {
-    "id": 21,
-    "txHash": "0xmock_success_1779499017",
-    "asset": "ETH",
-    "status": "executed",
-    "varianceBps": 6535,
-    "thresholdBps": 1000,
-    "value": "1.0 ETH",
-    "timestamp": "2026-05-23T01:16:57Z",
-    "prices": [
-      1.0,
-      1.01,
-      1.02
-    ]
-  },
-  {
-    "id": 21,
-    "txHash": "0xmock_blocked_1779503490",
-    "asset": "RUGCOIN",
-    "status": "blocked",
-    "varianceBps": 16666666,
-    "thresholdBps": 1000,
-    "value": "2.0 ETH",
-    "timestamp": "2026-05-23T02:31:30Z",
-    "prices": [
-      1.0,
-      2.0,
-      3.0
-    ]
-  },
-  {
-    "id": 21,
-    "txHash": "0xmock_success_1779503490",
-    "asset": "ETH",
-    "status": "executed",
-    "varianceBps": 6535,
-    "thresholdBps": 1000,
-    "value": "1.0 ETH",
-    "timestamp": "2026-05-23T02:31:30Z",
-    "prices": [
-      1.0,
-      1.01,
-      1.02
-    ]
-  },
-  {
-    "id": 21,
     "txHash": "0xmock_blocked_1779503592",
     "asset": "RUGCOIN",
     "status": "blocked",
@@ -293,6 +143,156 @@
     "thresholdBps": 1000,
     "value": "1.0 ETH",
     "timestamp": "2026-05-23T02:45:44Z",
+    "prices": [
+      1.0,
+      1.01,
+      1.02
+    ]
+  },
+  {
+    "id": 21,
+    "txHash": "0xmock_blocked_1779504409",
+    "asset": "RUGCOIN",
+    "status": "blocked",
+    "varianceBps": 16666666,
+    "thresholdBps": 1000,
+    "value": "2.0 ETH",
+    "timestamp": "2026-05-23T02:46:49Z",
+    "prices": [
+      1.0,
+      2.0,
+      3.0
+    ]
+  },
+  {
+    "id": 21,
+    "txHash": "0xmock_success_1779504409",
+    "asset": "ETH",
+    "status": "executed",
+    "varianceBps": 6535,
+    "thresholdBps": 1000,
+    "value": "1.0 ETH",
+    "timestamp": "2026-05-23T02:46:49Z",
+    "prices": [
+      1.0,
+      1.01,
+      1.02
+    ]
+  },
+  {
+    "id": 21,
+    "txHash": "0xmock_blocked_1779504461",
+    "asset": "RUGCOIN",
+    "status": "blocked",
+    "varianceBps": 16666666,
+    "thresholdBps": 1000,
+    "value": "2.0 ETH",
+    "timestamp": "2026-05-23T02:47:41Z",
+    "prices": [
+      1.0,
+      2.0,
+      3.0
+    ]
+  },
+  {
+    "id": 21,
+    "txHash": "0xmock_success_1779504461",
+    "asset": "ETH",
+    "status": "executed",
+    "varianceBps": 6535,
+    "thresholdBps": 1000,
+    "value": "1.0 ETH",
+    "timestamp": "2026-05-23T02:47:41Z",
+    "prices": [
+      1.0,
+      1.01,
+      1.02
+    ]
+  },
+  {
+    "id": 21,
+    "txHash": "0xmock_blocked_1779504520",
+    "asset": "RUGCOIN",
+    "status": "blocked",
+    "varianceBps": 16666666,
+    "thresholdBps": 1000,
+    "value": "2.0 ETH",
+    "timestamp": "2026-05-23T02:48:40Z",
+    "prices": [
+      1.0,
+      2.0,
+      3.0
+    ]
+  },
+  {
+    "id": 21,
+    "txHash": "0xmock_success_1779504520",
+    "asset": "ETH",
+    "status": "executed",
+    "varianceBps": 6535,
+    "thresholdBps": 1000,
+    "value": "1.0 ETH",
+    "timestamp": "2026-05-23T02:48:40Z",
+    "prices": [
+      1.0,
+      1.01,
+      1.02
+    ]
+  },
+  {
+    "id": 21,
+    "txHash": "0xmock_blocked_1779508108",
+    "asset": "RUGCOIN",
+    "status": "blocked",
+    "varianceBps": 16666666,
+    "thresholdBps": 1000,
+    "value": "2.0 ETH",
+    "timestamp": "2026-05-23T03:48:28Z",
+    "prices": [
+      1.0,
+      2.0,
+      3.0
+    ]
+  },
+  {
+    "id": 21,
+    "txHash": "0xmock_success_1779508108",
+    "asset": "ETH",
+    "status": "executed",
+    "varianceBps": 6535,
+    "thresholdBps": 1000,
+    "value": "1.0 ETH",
+    "timestamp": "2026-05-23T03:48:28Z",
+    "prices": [
+      1.0,
+      1.01,
+      1.02
+    ]
+  },
+  {
+    "id": 21,
+    "txHash": "0xmock_blocked_1779508191",
+    "asset": "RUGCOIN",
+    "status": "blocked",
+    "varianceBps": 16666666,
+    "thresholdBps": 1000,
+    "value": "2.0 ETH",
+    "timestamp": "2026-05-23T03:49:51Z",
+    "prices": [
+      1.0,
+      2.0,
+      3.0
+    ]
+  },
+  {
+    "id": 21,
+    "txHash": "0xmock_success_1779508191",
+    "asset": "ETH",
+    "status": "executed",
+    "varianceBps": 6535,
+    "thresholdBps": 1000,
+    "value": "1.0 ETH",
+    "timestamp": "2026-05-23T03:49:51Z",
     "prices": [
       1.0,
       1.01,

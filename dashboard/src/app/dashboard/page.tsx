@@ -368,7 +368,7 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="relative group">
-              <div className="absolute inset-0.5 bg-gradient-to-r from-primary to-emerald-500 rounded-xl blur-xs opacity-50 group-hover:opacity-100 transition-opacity duration-300 animate-pulse" />
+              <div className="absolute inset-0.5 bg-linear-to-r from-primary to-emerald-500 rounded-xl blur-xs opacity-50 group-hover:opacity-100 transition-opacity duration-300 animate-pulse" />
               <Link href="/" className="relative w-10 h-10 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 hover:border-primary/50 transition-all duration-300">
                 <svg className="w-5 h-5 text-primary transition-transform group-hover:rotate-12 duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
