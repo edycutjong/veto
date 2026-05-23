@@ -138,6 +138,14 @@ cast send "$VAULT_ADDRESS" "setAgent(address)" "$AGENT_ADDRESS" \
 
 echo -e "  ${GREEN}✅ Agent registered: ${AGENT_ADDRESS}${RESET}"
 
+# Whitelist the agent address as a target so demo/simulated transfers can succeed
+cast send "$VAULT_ADDRESS" "setTargetWhitelist(address,bool)" "$AGENT_ADDRESS" true \
+  --rpc-url "$RPC_URL" \
+  --private-key "$PRIVATE_KEY" \
+  > /dev/null 2>&1
+
+echo -e "  ${GREEN}✅ Agent address whitelisted as target: ${AGENT_ADDRESS}${RESET}"
+
 # ─────────────────────────────────────────────────────────────
 # STEP 4: Fund the vault
 # ─────────────────────────────────────────────────────────────

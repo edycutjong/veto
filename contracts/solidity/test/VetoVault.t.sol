@@ -37,6 +37,9 @@ contract VetoVaultTest is Test {
         // Set agent
         vault.setAgent(agent);
 
+        // Whitelist target
+        vault.setTargetWhitelist(address(target), true);
+
         // Fund the vault with 10 ETH
         vm.deal(address(vault), 10 ether);
     }
@@ -309,6 +312,7 @@ contract VetoVaultTest is Test {
     function test_executeTrade_transferFailed_reverts() public {
         uint256[] memory prices = _stablePrices();
         RevertingTarget revTarget = new RevertingTarget();
+        vault.setTargetWhitelist(address(revTarget), true);
         
         vm.prank(agent);
         vm.expectRevert(VetoVault.TransferFailed.selector);
@@ -359,6 +363,69 @@ contract VetoVaultTest is Test {
         RevertingTarget revTarget = new RevertingTarget();
         (bool ok2, ) = address(revTarget).call("random_calldata");
         assertFalse(ok2);
+    }
+
+    // ─── Whitelist & Cooldown Tests ───────────────────────────
+
+    function test_setTargetWhitelist_onlyOwner() public {
+        vm.prank(randomUser);
+        vm.expectRevert(VetoVault.NotOwner.selector);
+        vault.setTargetWhitelist(address(0xC3), true);
+    }
+
+    function test_setTargetWhitelist_revertsOnZero() public {
+        vm.expectRevert(VetoVault.InvalidTarget.selector);
+        vault.setTargetWhitelist(address(0), true);
+    }
+
+    function test_setCooldownPeriod_onlyOwner() public {
+        vm.prank(randomUser);
+        vm.expectRevert(VetoVault.NotOwner.selector);
+        vault.setCooldownPeriod(60);
+    }
+
+    function test_executeTrade_notWhitelisted_reverts() public {
+        uint256[] memory prices = _stablePrices();
+        address nonWhitelistedTarget = address(0x999);
+
+        vm.prank(agent);
+        vm.expectRevert(abi.encodeWithSelector(VetoVault.TargetNotWhitelisted.selector, nonWhitelistedTarget));
+        vault.executeTrade(
+            nonWhitelistedTarget,
+            "",
+            0,
+            prices
+        );
+    }
+
+    function test_executeTrade_cooldownActive_reverts() public {
+        uint256[] memory prices = _stablePrices();
+        vault.setCooldownPeriod(60);
+
+        // First trade execution - succeeds
+        vm.prank(agent);
+        vault.executeTrade(address(target), "", 0, prices);
+
+        // Second trade execution within cooldown - reverts
+        vm.prank(agent);
+        vm.expectRevert(abi.encodeWithSelector(VetoVault.CooldownActive.selector, 60));
+        vault.executeTrade(address(target), "", 0, prices);
+    }
+
+    function test_executeTrade_afterCooldown_succeeds() public {
+        uint256[] memory prices = _stablePrices();
+        vault.setCooldownPeriod(60);
+
+        // First trade execution - succeeds
+        vm.prank(agent);
+        vault.executeTrade(address(target), "", 0, prices);
+
+        // Fast forward time by 61 seconds
+        skip(61);
+
+        // Second trade execution after cooldown - succeeds
+        vm.prank(agent);
+        vault.executeTrade(address(target), "", 0, prices);
     }
 }
 

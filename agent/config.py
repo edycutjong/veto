@@ -75,6 +75,20 @@ VAULT_ABI = json.loads("""[
         "type": "error"
     },
     {
+        "inputs": [
+            {"name": "target", "type": "address"}
+        ],
+        "name": "TargetNotWhitelisted",
+        "type": "error"
+    },
+    {
+        "inputs": [
+            {"name": "remainingTime", "type": "uint256"}
+        ],
+        "name": "CooldownActive",
+        "type": "error"
+    },
+    {
         "anonymous": false,
         "inputs": [
             {"indexed": true, "name": "agent", "type": "address"},

@@ -252,11 +252,15 @@ function TradeRow({
   );
 }
 
-function AgentTerminal({ trades }: { trades: TradeAttempt[] }) {
+function AgentTerminal({ trades, ownerActions = [] }: { trades: TradeAttempt[]; ownerActions?: Array<{ text: string; type: "cmd" | "info" | "warn" | "error" | "success" }> }) {
   const terminalLines: Array<{ text: string; type: "cmd" | "info" | "warn" | "error" | "success" }> = [
     { text: "$ veto-agent --mode live --monitor", type: "cmd" },
     { text: "[Agent] Connected to RPC. Synchronizing contract states...", type: "info" },
   ];
+
+  ownerActions.forEach((act) => {
+    terminalLines.push(act);
+  });
 
   trades.forEach((trade) => {
     if (trade.status === "blocked") {
@@ -332,17 +336,66 @@ export default function Dashboard() {
   const [showBlockedModal, setShowBlockedModal] = useState(false);
   const [blockedModalData, setBlockedModalData] = useState<TradeAttempt | null>(null);
 
+  const [walletConnected, setWalletConnected] = useState(false);
+  const [walletConnecting, setWalletConnecting] = useState(false);
+  const [connectedAddress, setConnectedAddress] = useState("");
+  const [whitelistedTargets, setWhitelistedTargets] = useState<{ [address: string]: { name: string; allowed: boolean } }>({
+    "0xE592427A0AEce92De3Edee1F18E0157C05861564": { name: "UniswapV3 Router", allowed: true },
+    "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84": { name: "Lido Staking Pool", allowed: true },
+    "0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9": { name: "High-Risk Sandbox", allowed: false },
+  });
+  const [tempThreshold, setTempThreshold] = useState(1000);
+  const [tempCooldown, setTempCooldown] = useState(60);
+  const [isUpdatingRules, setIsUpdatingRules] = useState(false);
+  const [ownerActions, setOwnerActions] = useState<Array<{ text: string; type: "cmd" | "info" | "warn" | "error" | "success" }>>([]);
+
+  const handleConnectWallet = useCallback(() => {
+    setWalletConnecting(true);
+    setTimeout(() => {
+      setWalletConnecting(false);
+      setWalletConnected(true);
+      setConnectedAddress("0x2236AA5667BAbcB4218288517d6aE75bBbd486Af");
+      setOwnerActions((prev) => [
+        ...prev,
+        { text: `[Owner] Wallet connected: 0x2236AA5667BAbcB4218288517d6aE75bBbd486Af`, type: "success" },
+      ]);
+    }, 1000);
+  }, []);
+
+  const handleApplyRules = useCallback(() => {
+    setIsUpdatingRules(true);
+    setTimeout(() => {
+      setIsUpdatingRules(false);
+      
+      setVaultStats((prev) => ({
+        ...prev,
+        threshold: tempThreshold,
+      }));
+
+      setOwnerActions((prev) => [
+        ...prev,
+        { text: `[Owner] Broadcasted tx: setThreshold(${tempThreshold}) ... Confirmed!`, type: "cmd" },
+        { text: `[Owner] Broadcasted tx: setCooldownPeriod(${tempCooldown}) ... Confirmed!`, type: "cmd" },
+        { text: `[Owner] Whitelist targets updated: ${Object.entries(whitelistedTargets).map(([, d]) => `${d.name} (${d.allowed})`).join(", ")} ... Confirmed!`, type: "info" },
+        { text: `[RiskEngine] Contract safety policies updated dynamically. Volatility threshold set to ${tempThreshold} BPS. Cooldown set to ${tempCooldown}s.`, type: "success" }
+      ]);
+    }, 1200);
+  }, [tempThreshold, tempCooldown, whitelistedTargets]);
+
   const fetchVaultData = useCallback(async () => {
     try {
       const res = await fetch("/api/vault");
       if (res.ok) {
         const data = await res.json();
         setVaultStats(data);
+        if (!walletConnected) {
+          setTempThreshold(data.threshold);
+        }
       }
     } catch (e) {
       console.error("Failed to fetch vault statistics:", e);
     }
-  }, []);
+  }, [walletConnected]);
 
   const fetchTradesData = useCallback(async () => {
     const sort = (data: TradeAttempt[]) =>
@@ -445,6 +498,45 @@ export default function Dashboard() {
               </svg>
               Home
             </Link>
+
+            {walletConnected ? (
+              <div 
+                onClick={() => { setWalletConnected(false); setConnectedAddress(""); }}
+                className="flex items-center gap-2 border border-primary/30 bg-primary/5 rounded-lg px-3 py-1.5 hover:border-primary/50 transition-colors group relative cursor-pointer"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                <span className="text-xs font-mono text-slate-300">
+                  {connectedAddress.slice(0, 6)}...{connectedAddress.slice(-4)}
+                </span>
+                <span className="text-[9px] text-red-400 opacity-0 group-hover:opacity-100 absolute top-full right-0 mt-1.5 bg-slate-950 px-2 py-1 rounded border border-red-500/30 font-mono transition-opacity whitespace-nowrap z-50">
+                  Disconnect Wallet
+                </span>
+              </div>
+            ) : (
+              <button
+                onClick={handleConnectWallet}
+                disabled={walletConnecting}
+                className="relative inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono rounded-lg bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition-all cursor-pointer disabled:opacity-50 z-10"
+              >
+                {walletConnecting ? (
+                  <>
+                    <svg className="animate-spin h-3.5 w-3.5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                    Connect Wallet
+                  </>
+                )}
+              </button>
+            )}
+
             <div className="flex flex-col items-end gap-1">
               <div className="flex items-center gap-2">
                 <span className="status-dot status-dot-live" />
@@ -510,12 +602,27 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Threshold Control */}
-        <div className="glass-card border-gradient p-5 mb-8 animate-fade-in-up delay-400">
-          <div className="flex items-center justify-between mb-3">
+        {/* Owner Security Configuration Panel */}
+        <div className="glass-card border-gradient p-5 mb-8 animate-fade-in-up delay-400 relative overflow-hidden">
+          {!walletConnected && (
+            <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center rounded-xl z-20">
+              <div className="text-center p-6 max-w-sm">
+                <svg className="w-8 h-8 text-primary/50 mx-auto mb-2 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <p className="text-xs font-mono text-slate-300 font-bold uppercase tracking-wider">Owner Control Panel Locked</p>
+                <p className="text-[10px] text-slate-500 mt-1">Connect your owner wallet at the top right to configure threshold limits, whitelists, and cooldown policies dynamically on-chain.</p>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-900">
             <div>
-              <h2 className="text-sm font-semibold text-slate-300">Human Control Panel</h2>
-              <p className="text-xs text-slate-600">On-chain Maximum Acceptable Asset Variance (BPS)</p>
+              <h2 className="text-sm font-semibold text-slate-300 flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-xs bg-primary animate-pulse" />
+                Vault Rule Management (Multi-Policy Framework)
+              </h2>
+              <p className="text-[11px] text-slate-500 font-mono">ON-CHAIN SANDBOX ACCESS CONTROLS AND COPROCESSOR THRESHOLDS</p>
             </div>
             <button
               onClick={handleSimulateBlock}
@@ -527,18 +634,108 @@ export default function Dashboard() {
               Simulate Block
             </button>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex-1 h-1.5 rounded-full bg-slate-800 relative">
-              <div
-                className="absolute h-full rounded-full bg-primary"
-                style={{ width: `${(vaultStats.threshold / 5000) * 100}%` }}
-              />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Left Controls: Sliders */}
+            <div className="space-y-6">
+              {/* Volatility Limit Slider */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-mono font-bold text-slate-400">1. WASM VOLATILITY THRESHOLD</span>
+                  <span className="text-xs font-mono text-primary font-bold">{tempThreshold} bps ({(tempThreshold / 100).toFixed(1)}%)</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="100"
+                    max="5000"
+                    step="100"
+                    value={tempThreshold}
+                    onChange={(e) => setTempThreshold(Number(e.target.value))}
+                    disabled={!walletConnected}
+                    className="flex-1 accent-primary cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                  />
+                </div>
+                <p className="text-[10px] text-slate-600 mt-1 font-mono">Max statistical variance allowed before on-chain execution reverts.</p>
+              </div>
+
+              {/* Cooldown Period Slider */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-mono font-bold text-slate-400">2. RATE-LIMITING COOLDOWN</span>
+                  <span className="text-xs font-mono text-primary font-bold">{tempCooldown} seconds</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="0"
+                    max="300"
+                    step="10"
+                    value={tempCooldown}
+                    onChange={(e) => setTempCooldown(Number(e.target.value))}
+                    disabled={!walletConnected}
+                    className="flex-1 accent-primary cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                  />
+                </div>
+                <p className="text-[10px] text-slate-600 mt-1 font-mono">Delay required between trade proposals to block high-frequency loops.</p>
+              </div>
             </div>
-            <div className="text-right min-w-[120px]">
-              <span className="text-xl font-mono font-bold text-primary">{vaultStats.threshold}</span>
-              <span className="text-xs text-slate-600 ml-1">bps</span>
-              <p className="text-[10px] text-slate-600">{(vaultStats.threshold / 100).toFixed(1)}% max variance</p>
+
+            {/* Right Controls: Whitelisted Targets */}
+            <div>
+              <span className="text-xs font-mono font-bold text-slate-400 block mb-3">3. RECIPIENT TARGET WHITELIST</span>
+              <div className="space-y-2.5">
+                {Object.entries(whitelistedTargets).map(([addr, details]) => (
+                  <div key={addr} className="flex items-center justify-between bg-slate-950/50 border border-slate-900/60 p-2.5 rounded-lg">
+                    <div>
+                      <p className="text-xs font-bold text-slate-300">{details.name}</p>
+                      <p className="text-[9px] font-mono text-slate-600 break-all">{addr}</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={details.allowed}
+                        onChange={(e) => {
+                          setWhitelistedTargets(prev => ({
+                            ...prev,
+                            [addr]: { ...prev[addr], allowed: e.target.checked }
+                          }));
+                        }}
+                        disabled={!walletConnected}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-primary after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary/20 border border-slate-700/50 peer-checked:border-primary/40 disabled:opacity-30 disabled:cursor-not-allowed"></div>
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
+          </div>
+
+          {/* Footer Action Button */}
+          <div className="mt-6 pt-4 border-t border-slate-900/80 flex justify-end">
+            <button
+              onClick={handleApplyRules}
+              disabled={!walletConnected || isUpdatingRules}
+              className="px-5 py-2.5 bg-linear-to-r from-primary to-emerald-500 text-slate-950 font-mono font-bold text-xs rounded-lg hover:from-primary/95 hover:to-emerald-500/95 transition-all shadow-md shadow-primary/10 hover:scale-[1.02] active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-1.5"
+            >
+              {isUpdatingRules ? (
+                <>
+                  <svg className="animate-spin h-3.5 w-3.5 text-slate-950" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  BROADCASTING TRANSACTIONS...
+                </>
+              ) : (
+                <>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  APPLY RULES TO VAULT
+                </>
+              )}
+            </button>
           </div>
         </div>
 
@@ -574,7 +771,7 @@ export default function Dashboard() {
               <span className="w-2 h-2 rounded-full bg-primary pulse-glow" />
               Agent Execution Terminal
             </h2>
-            <AgentTerminal trades={trades} />
+            <AgentTerminal trades={trades} ownerActions={ownerActions} />
           </div>
         </div>
 
