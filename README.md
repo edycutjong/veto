@@ -39,8 +39,8 @@
 
 Veto is fully deployed and verified on **Arbitrum Sepolia Testnet**. All trade validation and program logic are executed live on-chain, proving the physical block capabilities of the Stylus WASM math coprocessor:
 
-- **Stylus RiskEngine (WASM)**: [`0x0a94398c550226ca01570afede89e378d81e9426`](https://sepolia.arbiscan.io/address/0x0a94398c550226ca01570afede89e378d81e9426)
-- **VetoVault (Solidity/EVM)**: [`0x77435CF556A3705496Aa3739bD3678D9edfcB69c`](https://sepolia.arbiscan.io/address/0x77435CF556A3705496Aa3739bD3678D9edfcB69c)
+- **Stylus RiskEngine (WASM)**: [`0x2d081a02227ed0e80749628b2a647a47c8117ab1`](https://sepolia.arbiscan.io/address/0x2d081a02227ed0e80749628b2a647a47c8117ab1) — verified via `cargo stylus verify`
+- **VetoVault (Solidity/EVM)**: [`0x57a4f34aC60Ba128913e64F76b7F5259266e0EFd`](https://sepolia.arbiscan.io/address/0x57a4f34aC60Ba128913e64F76b7F5259266e0EFd) — verified on Sourcify (exact match)
 - **Agent/Wallet Address**: [`0x2236AA5667BAbcB4218288517d6aE75bBbd486Af`](https://sepolia.arbiscan.io/address/0x2236AA5667BAbcB4218288517d6aE75bBbd486Af)
 
 ### On-Chain Transactions:
