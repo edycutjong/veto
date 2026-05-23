@@ -12,7 +12,7 @@ EVM layer of the Veto execution sandbox. Handles fund custody, access control, a
 
 ## Tests
 
-23 tests, all passing. Run with:
+33 tests, all passing. Run with:
 
 ```bash
 forge test -vvv
@@ -26,11 +26,12 @@ forge snapshot
 
 ## Deployment
 
+Use the deploy script in `scripts/deploy.sh` from the repo root, or deploy manually:
+
 ```bash
-forge script script/Deploy.s.sol:DeployScript \
+forge create src/VetoVault.sol:VetoVault \
   --rpc-url $RPC_URL \
-  --private-key $PRIVATE_KEY \
-  --broadcast
+  --private-key $PRIVATE_KEY
 ```
 
 Set `RPC_URL` to the Robinhood Chain / Arbitrum Sepolia RPC endpoint. After deployment, copy the `VetoVault` and `RiskEngine` addresses into `agent/.env`.

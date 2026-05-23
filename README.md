@@ -70,7 +70,7 @@ Autonomous AI trading agents are proliferating across DeFi. They optimize for re
 
 | Layer | Technology |
 |---|---|
-| **Vault** | Solidity (EVM) — fund custody, access control, 23 passing tests |
+| **Vault** | Solidity (EVM) — fund custody, access control, 33 passing tests |
 | **Risk Engine** | Rust/Stylus (WASM) — variance computation, `no_std`, U256 math |
 | **AI Agent** | Python + web3.py — market monitoring + trade execution |
 | **Dashboard** | Next.js 16 + Tailwind v4 — cyberpunk control panel |
@@ -110,7 +110,7 @@ Autonomous AI trading agents are proliferating across DeFi. They optimize for re
 git clone https://github.com/edycutjong/veto.git
 cd veto
 
-# 2. Run Solidity tests (23 tests)
+# 2. Run Solidity tests (33 tests)
 cd contracts/solidity && forge test -vvv && cd ../..
 
 # 3. Build Stylus WASM
@@ -134,7 +134,7 @@ npm run lint          # ESLint
 npm run typecheck     # TypeScript check
 npm run ci            # Full CI pipeline (lint + typecheck + test + build)
 
-# Solidity (23 tests)
+# Solidity (33 tests)
 cd contracts/solidity
 forge test -vvv
 
@@ -143,43 +143,45 @@ cd contracts/stylus
 cargo test --features stylus-test
 ```
 
-CI runs on every push via GitHub Actions: Dashboard (Node 20/22/24), Foundry tests, and Stylus WASM build.
+CI runs on every push via GitHub Actions: Dashboard lint + typecheck + test + build (Node 20/22/24), Foundry tests, and Stylus WASM build.
 
 ## 📁 Project Structure
 
 ```
 veto/
 ├── contracts/
-│   ├── solidity/               # EVM layer
+│   ├── solidity/                   # EVM layer
 │   │   ├── src/
 │   │   │   ├── VetoVault.sol       # Fund custody + trade interception
 │   │   │   ├── IRiskEngine.sol     # Interface for cross-contract Stylus call
 │   │   │   └── RiskEngineSol.sol   # Pure-Solidity variance (gas benchmark)
 │   │   └── test/
-│   │       └── VetoVault.t.sol     # Foundry tests (23 passing)
-│   └── stylus/                 # WASM math coprocessor (Rust)
+│   │       └── VetoVault.t.sol     # Foundry tests (33 passing)
+│   └── stylus/                     # WASM math coprocessor (Rust)
 │       └── src/
 │           ├── lib.rs              # compute_variance() + check_volatility()
 │           └── main.rs             # Stylus entrypoint
-├── agent/                      # Python AI trading agent
-│   ├── agent.py                # Orchestrator (demo + live modes)
-│   ├── config.py               # Contract ABIs and addresses
-│   ├── price_fetcher.py        # CoinGecko price feed
-│   ├── Procfile                # Railway start command
-│   ├── requirements.txt        # Python dependencies
-│   ├── .env.example            # Environment template
-│   └── tests/                  # pytest suites
+├── agent/                          # Python AI trading agent
+│   ├── agent.py                    # Orchestrator (demo + live modes)
+│   ├── config.py                   # Contract ABIs and addresses
+│   ├── price_fetcher.py            # CoinGecko price feed
+│   ├── Procfile                    # Railway start command
+│   ├── requirements.txt            # Python dependencies
+│   ├── .env.example                # Environment template
+│   └── tests/                      # pytest suites
 │       ├── test_agent.py
 │       └── test_price_fetcher.py
-├── dashboard/                  # Next.js 16 cyberpunk dashboard
-│   ├── src/app/                # Pages and layout
-│   └── public/                 # Icon SVG + OG image
-├── docs/                       # README assets (hero, architecture, screenshots)
-├── scripts/                    # Deployment helpers (deploy.sh, verify.sh, demo.sh)
-├── test/                       # Integration tests
-├── .github/                    # CI + CodeQL + Dependabot
-└── LICENSE                     # MIT
+├── dashboard/                      # Next.js 16 cyberpunk dashboard
+│   ├── src/app/                    # Pages and layout
+│   └── public/                     # Icon SVG + OG image
+├── docs/                           # README assets (hero, architecture, screenshots)
+├── scripts/                        # Deployment helpers (deploy.sh, verify.sh, demo.sh)
+├── test/                           # Integration tests (in progress)
+├── .github/                        # CI + CodeQL + Dependabot
+└── LICENSE                         # MIT
 ```
+
+> Component docs: [Agent](agent/README.md) · [Dashboard](dashboard/README.md) · [Solidity Contracts](contracts/solidity/README.md)
 
 ## 📄 License
 

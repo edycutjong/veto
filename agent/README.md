@@ -109,7 +109,4 @@ To run the agent 24/7 in the cloud:
     *   `RISK_ENGINE_ADDRESS`: The deployed WASM risk engine address.
     *   `AGENT_PRIVATE_KEY`: Private key for the EOA agent wallet.
     *   `LOOP_INTERVAL`: `60` (or your preferred execution frequency).
-4. **Set Start Command**: Railway will auto-detect Python. In settings, set the **Start Command** to:
-   ```bash
-   python agent.py
-   ```
+4. **Start Command**: The `Procfile` in the `agent/` directory (`web: python agent.py`) is detected automatically by Railway. No manual start command needed unless you override it.

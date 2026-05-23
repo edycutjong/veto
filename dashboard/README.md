@@ -15,7 +15,7 @@ The dashboard functions as a military-grade SOC monitor, providing humans with l
 
 ## 🚀 Key Features
 
-*   **Real-Time On-Chain Telemetry:** Direct RPC queries for live vault balance, execution statistics, and threshold settings from the [VetoVault](file:///Users/edycu/Projects/Hackathon/Veto/contracts/solidity/src/VetoVault.sol) contract using raw JSON-RPC over HTTPS.
+*   **Real-Time On-Chain Telemetry:** Direct RPC queries for live vault balance, execution statistics, and threshold settings from the `VetoVault` contract using raw JSON-RPC over HTTPS.
 *   **Dynamic Price Charting:** Clean SVG-based price series lines with animated gradient fills and glow filters, clearly indicating the maximum variance limit interface.
 *   **Split-Pane Observability:** 
     *   **Execution Logs:** Direct visual list of approved and intercepted trade attempts complete with token details, calculated variance, and direct link verification to the Arbiscan Sepolia block explorer.
@@ -61,7 +61,7 @@ graph TD
 
 ## ⚙️ Configuration & Environment
 
-The dashboard interacts with the blockchain through Next.js environment variables. See [dashboard/.env.example](file:///Users/edycu/Projects/Hackathon/Veto/dashboard/.env.example) for setup targets.
+The dashboard interacts with the blockchain through Next.js environment variables. See `.env.example` in this directory for all available options.
 
 Create a `.env.local` file inside this directory:
 
@@ -76,7 +76,7 @@ NEXT_PUBLIC_VAULT_ADDRESS=0x77435CF556A3705496Aa3739bD3678D9edfcB69c
 NEXT_PUBLIC_RISK_ENGINE_ADDRESS=0x0a94398c550226ca01570afede89e378d81e9426
 
 # Python Backend Agent API URL (required for live sync with the agent, falls back to static /trades.json)
-NEXT_PUBLIC_AGENT_URL=http://localhost:8000
+NEXT_PUBLIC_AGENT_URL=http://localhost:8080
 ```
 
 > [!NOTE]
@@ -128,13 +128,17 @@ dashboard/
 │   └── app/
 │       ├── api/
 │       │   └── vault/
-│       │       └── route.ts     # RPC communication bridge
-│       ├── globals.css          # Scanlines, glow effects, glassmorphism UI
-│       ├── layout.tsx           # Dashboard layout
-│       └── page.tsx             # Main dashboard UI
+│       │       └── route.ts         # RPC communication bridge
+│       ├── dashboard/
+│       │   └── page.tsx             # Security console (SOC monitor)
+│       ├── globals.css              # Scanlines, glow effects, glassmorphism UI
+│       ├── layout.tsx               # Root layout and metadata
+│       └── page.tsx                 # Landing page
 ├── public/
-│   └── trades.json              # Shared trade attempts log
-├── jest.config.ts               # Test configurations
-└── package.json                 # Next.js / Tailwind build configuration
+│   ├── icon.svg                     # Veto shield icon
+│   ├── og-image.png                 # Social preview image
+│   └── trades.json                  # Shared trade attempts log
+├── jest.config.ts                   # Test configuration
+└── package.json                     # Next.js / Tailwind build configuration
 ```
 

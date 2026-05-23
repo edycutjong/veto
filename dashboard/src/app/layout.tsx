@@ -13,7 +13,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://veto-dashboard.vercel.app"),
+  metadataBase: new URL("https://veto.edycu.dev"),
   title: "Veto — Your AI tried. Veto said no.",
   description:
     "Hybrid EVM/WASM execution sandbox that physically prevents AI agents from executing hallucinated trades. Solidity holds the money. Rust does the math. Built on Robinhood Chain with Arbitrum Stylus.",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     title: "Veto — Your AI tried. Veto said no.",
     description:
       "Hybrid EVM/WASM execution sandbox that blocks volatile AI trades on-chain via Stylus math coprocessor.",
-    url: "https://veto-dashboard.vercel.app",
+    url: "https://veto.edycu.dev",
     siteName: "Veto",
     images: [
       {
