@@ -199,7 +199,7 @@ export default function LandingPage() {
   const isRunning = simState === "sending" || simState === "evaluating";
 
   return (
-    <div className="relative min-h-screen flex flex-col overflow-x-hidden select-none font-sans bg-slate-950 scanline">
+    <div className="relative min-h-screen flex flex-col overflow-x-hidden font-sans bg-slate-950 scanline">
       <CanvasBackground />
 
       {/* ── Sticky Navigation ─────────────────────────────────── */}
@@ -208,9 +208,7 @@ export default function LandingPage() {
 
           {/* Logo */}
           <div className="flex items-center gap-3 shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-linear-to-br from-primary to-cyan-600 flex items-center justify-center shadow-lg shadow-primary/25">
-              <ShieldIcon className="w-4 h-4 text-white" />
-            </div>
+            <img src="/icon.svg" alt="Veto" className="w-8 h-8" />
             <span className="font-display text-base font-black tracking-widest">
               <span className="text-primary">VE</span><span className="text-danger">TO</span>
             </span>
@@ -352,7 +350,7 @@ export default function LandingPage() {
           <div className="h-36 bg-slate-950/70 border border-slate-900 rounded-xl px-5 flex items-center justify-between mb-5">
 
             {/* Agent node */}
-            <div className="flex flex-col items-center gap-2">
+            <div className="relative flex flex-col items-center">
               <div className={`w-11 h-11 rounded-xl flex items-center justify-center border-2 transition-all duration-500 ${
                 simState === "sending"
                   ? "border-amber-400/60 bg-amber-400/10 shadow-[0_0_20px_rgba(245,158,11,0.2)]"
@@ -362,11 +360,11 @@ export default function LandingPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
-              <span className="text-[9px] font-mono text-slate-600 uppercase tracking-wider">Agent</span>
+              <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 text-[9px] font-mono text-slate-600 uppercase tracking-wider whitespace-nowrap">Agent</span>
             </div>
 
             {/* Wire 1 */}
-            <div className="flex-1 h-px bg-slate-800 mx-3 relative overflow-hidden">
+            <div className="flex-1 h-px bg-slate-800 relative overflow-hidden">
               {simState === "sending" && (
                 <div className="absolute top-[-2px] h-[5px] w-5 bg-amber-400/80 rounded-full animate-path-flow" />
               )}
@@ -378,7 +376,7 @@ export default function LandingPage() {
             </div>
 
             {/* Veto node */}
-            <div className="flex flex-col items-center gap-2">
+            <div className="relative flex flex-col items-center">
               <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${
                 simState === "evaluating"
                   ? "border-primary/60 bg-primary/10 shadow-[0_0_25px_rgba(0,200,5,0.25)]"
@@ -403,18 +401,18 @@ export default function LandingPage() {
                   <ShieldIcon className="w-7 h-7 text-slate-600" />
                 )}
               </div>
-              <span className="text-[9px] font-mono text-slate-600 uppercase tracking-wider">Veto</span>
+              <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 text-[9px] font-mono text-slate-600 uppercase tracking-wider whitespace-nowrap">Veto</span>
             </div>
 
             {/* Wire 2 */}
-            <div className="flex-1 h-px bg-slate-800 mx-3 relative overflow-hidden">
+            <div className="flex-1 h-px bg-slate-800 relative overflow-hidden">
               {simResult === "executed" && (
                 <div className="absolute inset-0 bg-primary/25 transition-colors duration-500" />
               )}
             </div>
 
             {/* Vault node */}
-            <div className="flex flex-col items-center gap-2">
+            <div className="relative flex flex-col items-center">
               <div className={`w-11 h-11 rounded-xl flex items-center justify-center border-2 transition-all duration-500 ${
                 simResult === "executed"
                   ? "border-primary/50 bg-primary/10 shadow-[0_0_20px_rgba(0,200,5,0.2)]"
@@ -424,7 +422,7 @@ export default function LandingPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
               </div>
-              <span className="text-[9px] font-mono text-slate-600 uppercase tracking-wider">Vault</span>
+              <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 text-[9px] font-mono text-slate-600 uppercase tracking-wider whitespace-nowrap">Vault</span>
             </div>
           </div>
 
@@ -479,8 +477,16 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 relative">
 
-            {/* Horizontal connector */}
-            <div className="hidden md:block absolute top-14 left-[calc(33.33%+2rem)] right-[calc(33.33%+2rem)] h-px bg-linear-to-r from-amber-500/20 via-primary/30 to-primary/20" />
+            {/* Left connector: step 1 right edge → step 2 left edge */}
+            <div
+              className="hidden md:block absolute top-14 h-px bg-gradient-to-r from-amber-500/30 to-primary/40"
+              style={{ left: "calc(16.667% + 3.5rem)", right: "calc(50% + 3.5rem)" }}
+            />
+            {/* Right connector: step 2 right edge → step 3 left edge */}
+            <div
+              className="hidden md:block absolute top-14 h-px bg-gradient-to-r from-primary/40 to-primary/20"
+              style={{ left: "calc(50% + 3.5rem)", right: "calc(16.667% + 3.5rem)" }}
+            />
 
             {/* Step 1 */}
             <div className="flex flex-col items-center text-center px-6">
@@ -622,19 +628,27 @@ export default function LandingPage() {
             {[
               { label: "Risk Engine", sublabel: "Stylus WASM Coprocessor", address: "0x0a94398c550226ca01570afede89e378d81e9426", accent: true },
               { label: "VetoVault", sublabel: "Solidity EVM Contract", address: "0x77435CF556A3705496Aa3739bD3678D9edfcB69c", accent: true },
-              { label: "Agent Wallet", sublabel: "Python Trading Agent EOA", address: "0x2236AA5667BAbcB4218288517d6aE75bBbd486Af", accent: false },
+              { label: "Agent Wallet", sublabel: "Python Trading Agent EOA", address: "0x2236AA5667BAbcB4218288517d6aE75bBbd486Af", accent: true },
             ].map(({ label, sublabel, address, accent }) => (
-              <div
+              <a
                 key={label}
-                className={`glass-card p-5 flex items-start gap-4 ${accent ? "sm:col-span-1" : "sm:col-span-2"}`}
+                href={`https://sepolia.arbiscan.io/address/${address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`glass-card p-5 flex items-start gap-4 group hover:border-primary/30 transition-colors ${accent ? "sm:col-span-1" : "sm:col-span-2"}`}
               >
                 <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${accent ? "bg-primary shadow-[0_0_8px_rgba(0,200,5,0.5)]" : "bg-slate-700"}`} />
-                <div className="min-w-0">
-                  <p className="text-xs text-slate-300 font-semibold mb-0.5">{label}</p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2 mb-0.5">
+                    <p className="text-xs text-slate-300 font-semibold group-hover:text-primary transition-colors">{label}</p>
+                    <svg className="w-3 h-3 text-slate-700 group-hover:text-primary transition-colors shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </div>
                   <p className="text-[10px] text-slate-600 font-mono uppercase tracking-wider mb-2">{sublabel}</p>
                   <p className="font-mono text-[11px] text-slate-400 break-all">{address}</p>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
 
@@ -673,14 +687,85 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Sponsors ──────────────────────────────────────────── */}
+      <section className="relative z-10 border-t border-slate-900/60 py-16">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <p className="text-[10px] text-slate-700 font-mono tracking-widest uppercase mb-10">
+            Built For
+          </p>
+
+          <div className="flex flex-wrap items-center justify-center gap-6 mb-12">
+            {/* Arbitrum */}
+            <a
+              href="https://arbitrum.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 px-5 py-3 rounded-xl border border-slate-800 bg-slate-900/40 hover:border-[#28A0F0]/40 hover:bg-[#28A0F0]/5 transition-all group"
+            >
+              <svg className="w-5 h-5 text-[#28A0F0] shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <div className="text-left">
+                <p className="text-xs font-bold text-slate-300 group-hover:text-[#28A0F0] transition-colors leading-none">Arbitrum</p>
+                <p className="text-[9px] font-mono text-slate-600 uppercase tracking-wider mt-0.5">Stylus Platform</p>
+              </div>
+            </a>
+
+            {/* Robinhood Chain */}
+            <a
+              href="https://robinhoodchain.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 px-5 py-3 rounded-xl border border-slate-800 bg-slate-900/40 hover:border-[#00C805]/40 hover:bg-[#00C805]/5 transition-all group"
+            >
+              <svg className="w-5 h-5 text-[#00C805] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+              </svg>
+              <div className="text-left">
+                <p className="text-xs font-bold text-slate-300 group-hover:text-[#00C805] transition-colors leading-none">Robinhood Chain</p>
+                <p className="text-[9px] font-mono text-slate-600 uppercase tracking-wider mt-0.5">Chain Infrastructure</p>
+              </div>
+            </a>
+
+            {/* HackQuest */}
+            <a
+              href="https://www.hackquest.io/hackathons/Arbitrum-Open-House-London-Online-Buildathon"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 px-5 py-3 rounded-xl border border-slate-800 bg-slate-900/40 hover:border-violet-500/40 hover:bg-violet-500/5 transition-all group"
+            >
+              <svg className="w-5 h-5 text-violet-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+              </svg>
+              <div className="text-left">
+                <p className="text-xs font-bold text-slate-300 group-hover:text-violet-400 transition-colors leading-none">HackQuest</p>
+                <p className="text-[9px] font-mono text-slate-600 uppercase tracking-wider mt-0.5">Arbitrum London 2026</p>
+              </div>
+            </a>
+          </div>
+
+          {/* Prize tracks */}
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {[
+              { label: "Overall — Robinhood Chain", prize: "$40K", color: "text-[#00C805] border-[#00C805]/20 bg-[#00C805]/5" },
+              { label: "Best Agentic Project",      prize: "$7K",  color: "text-[#28A0F0] border-[#28A0F0]/20 bg-[#28A0F0]/5" },
+              { label: "Grants",                    prize: "$30K", color: "text-violet-400 border-violet-500/20 bg-violet-500/5" },
+            ].map(({ label, prize, color }) => (
+              <div key={label} className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[10px] font-mono ${color}`}>
+                <span className="text-current opacity-60">{label}</span>
+                <span className="font-bold">{prize}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Footer ────────────────────────────────────────────── */}
       <footer className="relative z-10 border-t border-slate-900/60 py-8">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
 
           <div className="flex items-center gap-2.5">
-            <div className="w-5 h-5 rounded bg-linear-to-br from-primary to-cyan-600 flex items-center justify-center">
-              <ShieldIcon className="w-3 h-3 text-white" />
-            </div>
+            <img src="/icon.svg" alt="Veto" className="w-5 h-5" />
             <span className="font-display text-xs font-black tracking-widest">
               <span className="text-primary">VE</span><span className="text-danger">TO</span>
             </span>
