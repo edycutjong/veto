@@ -626,8 +626,8 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             {[
-              { label: "Risk Engine", sublabel: "Stylus WASM Coprocessor", address: "0x0a94398c550226ca01570afede89e378d81e9426", accent: true },
-              { label: "VetoVault", sublabel: "Solidity EVM Contract", address: "0x77435CF556A3705496Aa3739bD3678D9edfcB69c", accent: true },
+              { label: "Risk Engine", sublabel: "Stylus WASM Coprocessor", address: "0x2d081a02227ed0e80749628b2a647a47c8117ab1", accent: true },
+              { label: "VetoVault", sublabel: "Solidity EVM Contract", address: "0x57a4f34aC60Ba128913e64F76b7F5259266e0EFd", accent: true },
               { label: "Agent Wallet", sublabel: "Python Trading Agent EOA", address: "0x2236AA5667BAbcB4218288517d6aE75bBbd486Af", accent: true },
             ].map(({ label, sublabel, address, accent }) => (
               <a
