@@ -183,11 +183,11 @@ Deployed **2026-05-23** on Arbitrum Sepolia (chain ID `421614`):
 
 | Contract | Address | Verification |
 |---|---|---|
-| RiskEngine (Stylus WASM) | [`0x2d081a02227ed0e80749628b2a647a47c8117ab1`](https://sepolia.arbiscan.io/address/0x2d081a02227ed0e80749628b2a647a47c8117ab1) | `cargo stylus verify` — exact match |
-| VetoVault (Solidity) | [`0x57a4f34aC60Ba128913e64F76b7F5259266e0EFd`](https://sepolia.arbiscan.io/address/0x57a4f34aC60Ba128913e64F76b7F5259266e0EFd) | Sourcify — exact match |
+| RiskEngine (Stylus WASM) | [`0x2c0eebee49b38b2fe363664077003339e7b45d64`](https://sepolia.arbiscan.io/address/0x2c0eebee49b38b2fe363664077003339e7b45d64) | `cargo stylus verify` — exact match |
+| VetoVault (Solidity) | [`0xba53711364C0fde5F6e8D450CFAd2655ADA70eD2`](https://sepolia.arbiscan.io/address/0xba53711364C0fde5F6e8D450CFAd2655ADA70eD2) | Sourcify — exact match |
 | Agent Wallet (EOA) | [`0x2236AA5667BAbcB4218288517d6aE75bBbd486Af`](https://sepolia.arbiscan.io/address/0x2236AA5667BAbcB4218288517d6aE75bBbd486Af) | — |
 
-**Deployment tx (RiskEngine):** [`0x209fc93b309dc554449d895cc62bc790b6a1fac33b646af9f5953af9f5956a9f`](https://sepolia.arbiscan.io/tx/0x209fc93b309dc554449d895cc62bc790b6a1fac33b646af9f5953af9f5956a9f)
+**Deployment tx (RiskEngine):** [`0x2c0eebee49b38b2fe363664077003339e7b45d64f92e8906af55c2347d54d0ca`](https://sepolia.arbiscan.io/tx/0x2c0eebee49b38b2fe363664077003339e7b45d64f92e8906af55c2347d54d0ca)
 
 **Notable on-chain transactions:**
 

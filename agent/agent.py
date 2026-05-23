@@ -72,7 +72,22 @@ def init_trades_cache():
             print(f"Error loading trades.json: {e}")
 
 
-def log_trade_to_json(asset: str, status: str, variance_bps: int, threshold_bps: int, value: str, prices: list, tx_hash: str = ""):
+def _decode_cooldown_remaining(exc: Exception) -> int:
+    """Extract remaining cooldown seconds from a CooldownActive revert.
+
+    The ABI-encoded error is: 4-byte selector + 32-byte uint256.
+    web3.py exposes this on ContractLogicError as exc.data (hex string).
+    """
+    try:
+        data = getattr(exc, "data", None) or ""
+        if isinstance(data, str) and len(data) >= 74:
+            return int(data[10:74], 16)
+    except (ValueError, TypeError):
+        pass
+    return 0
+
+
+def log_trade_to_json(asset: str, status: str, variance_bps: int, threshold_bps: int, value: str, prices: list, tx_hash: str = "", reason: str = ""):
     """Write/append a trade attempt to dashboard/public/trades.json and memory cache."""
     global TRADES_CACHE
     
@@ -89,6 +104,9 @@ def log_trade_to_json(asset: str, status: str, variance_bps: int, threshold_bps:
         "prices": [float(p) for p in prices]
     }
     
+    if reason:
+        new_trade["reason"] = reason
+        
     if tx_hash:
         TRADES_CACHE = [t for t in TRADES_CACHE if t.get("txHash") != tx_hash]
         
@@ -408,7 +426,15 @@ def _run_live():
         var_bps_v = calculate_variance_bps(scaled_v)
         if "VolatilityExceedsThreshold" in error_msg:
             print_blocked(f"Risk Engine blocked: {error_msg}")
-            log_trade_to_json("RUGCOIN", "blocked", var_bps_v, threshold, "0.0 ETH", raw_v, f"0xreverted_before_send_{int(time.time())}")
+            log_trade_to_json("RUGCOIN", "blocked", var_bps_v, threshold, "0.0 ETH", raw_v, f"0xreverted_before_send_{int(time.time())}", "VolatilityExceedsThreshold")
+        elif "TargetNotWhitelisted" in error_msg:
+            print_blocked(f"Whitelist policy blocked: {error_msg}")
+            log_trade_to_json("RUGCOIN", "blocked", var_bps_v, threshold, "0.0 ETH", raw_v, f"0xreverted_whitelist_{int(time.time())}", "TargetNotWhitelisted")
+        elif "CooldownActive" in error_msg:
+            remaining = _decode_cooldown_remaining(e)
+            reason = f"CooldownActive:{remaining}"
+            print_blocked(f"Cooldown policy blocked: {remaining}s remaining")
+            log_trade_to_json("RUGCOIN", "blocked", var_bps_v, threshold, "0.0 ETH", raw_v, f"0xreverted_cooldown_{int(time.time())}", reason)
         else:
             print(f"{RED}Contract error: {error_msg}{RESET}")
     except Exception as e:
@@ -452,7 +478,21 @@ def _run_live():
             log_trade_to_json("ETH", "blocked", var_bps_s, threshold, "0.0 ETH", raw_s, tx_hash_s.hex())
             
     except ContractLogicError as e:
-        print(f"{RED}Contract error: {e}{RESET}")
+        error_msg = str(e)
+        var_bps_s = calculate_variance_bps(scaled_s)
+        if "VolatilityExceedsThreshold" in error_msg:
+            print_blocked(f"Risk Engine blocked: {error_msg}")
+            log_trade_to_json("ETH", "blocked", var_bps_s, threshold, "0.0 ETH", raw_s, f"0xreverted_before_send_{int(time.time())}", "VolatilityExceedsThreshold")
+        elif "TargetNotWhitelisted" in error_msg:
+            print_blocked(f"Whitelist policy blocked: {error_msg}")
+            log_trade_to_json("ETH", "blocked", var_bps_s, threshold, "0.0 ETH", raw_s, f"0xreverted_whitelist_{int(time.time())}", "TargetNotWhitelisted")
+        elif "CooldownActive" in error_msg:
+            remaining = _decode_cooldown_remaining(e)
+            reason = f"CooldownActive:{remaining}"
+            print_blocked(f"Cooldown policy blocked: {remaining}s remaining")
+            log_trade_to_json("ETH", "blocked", var_bps_s, threshold, "0.0 ETH", raw_s, f"0xreverted_cooldown_{int(time.time())}", reason)
+        else:
+            print(f"{RED}Contract error: {error_msg}{RESET}")
     except Exception as e:
         print(f"{RED}Error: {e}{RESET}")
         traceback.print_exc()

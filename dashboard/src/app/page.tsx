@@ -310,6 +310,29 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+
+          {/* Ecosystem Partners */}
+          <div className="flex flex-wrap items-center gap-3 mt-8 pt-6 border-t border-slate-900 w-full animate-fade-in-up delay-100">
+            <span className="text-[10px] text-slate-600 font-mono tracking-wider uppercase mr-1">Ecosystem:</span>
+            
+            {/* Arbitrum */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-900 bg-slate-900/40 hover:border-primary/30 hover:bg-slate-900/80 transition-all duration-200">
+              <img src="/icon-arbitrum.svg" alt="Arbitrum" className="w-4 h-4 object-contain" />
+              <span className="text-[10px] font-semibold text-slate-400">Arbitrum</span>
+            </div>
+
+            {/* Robinhood Chain */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-900 bg-slate-900/40 hover:border-primary/30 hover:bg-slate-900/80 transition-all duration-200">
+              <img src="/icon-robinhood-chain.png" alt="Robinhood Chain" className="w-4 h-4 object-contain rounded-full" />
+              <span className="text-[10px] font-semibold text-slate-400">Robinhood Chain</span>
+            </div>
+
+            {/* HackQuest */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-900 bg-slate-900/40 hover:border-amber-500/30 hover:bg-slate-900/80 transition-all duration-200">
+              <img src="/icon-hackquest.png" alt="HackQuest" className="w-4 h-4 object-contain" />
+              <span className="text-[10px] font-semibold text-slate-400">HackQuest</span>
+            </div>
+          </div>
         </section>
 
         {/* Right: Sandbox */}
@@ -626,8 +649,8 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             {[
-              { label: "Risk Engine", sublabel: "Stylus WASM Coprocessor", address: "0x2d081a02227ed0e80749628b2a647a47c8117ab1", accent: true },
-              { label: "VetoVault", sublabel: "Solidity EVM Contract", address: "0x57a4f34aC60Ba128913e64F76b7F5259266e0EFd", accent: true },
+              { label: "Risk Engine", sublabel: "Stylus WASM Coprocessor", address: "0x2c0eebee49b38b2fe363664077003339e7b45d64", accent: true },
+              { label: "VetoVault", sublabel: "Solidity EVM Contract", address: "0xba53711364C0fde5F6e8D450CFAd2655ADA70eD2", accent: true },
               { label: "Agent Wallet", sublabel: "Python Trading Agent EOA", address: "0x2236AA5667BAbcB4218288517d6aE75bBbd486Af", accent: true },
             ].map(({ label, sublabel, address, accent }) => (
               <a
@@ -702,9 +725,7 @@ export default function LandingPage() {
               rel="noopener noreferrer"
               className="flex items-center gap-2.5 px-5 py-3 rounded-xl border border-slate-800 bg-slate-900/40 hover:border-[#28A0F0]/40 hover:bg-[#28A0F0]/5 transition-all group"
             >
-              <svg className="w-5 h-5 text-[#28A0F0] shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <img src="/icon-arbitrum.svg" alt="Arbitrum" className="w-5 h-5 object-contain shrink-0" />
               <div className="text-left">
                 <p className="text-xs font-bold text-slate-300 group-hover:text-[#28A0F0] transition-colors leading-none">Arbitrum</p>
                 <p className="text-[9px] font-mono text-slate-600 uppercase tracking-wider mt-0.5">Stylus Platform</p>
@@ -718,9 +739,7 @@ export default function LandingPage() {
               rel="noopener noreferrer"
               className="flex items-center gap-2.5 px-5 py-3 rounded-xl border border-slate-800 bg-slate-900/40 hover:border-[#00C805]/40 hover:bg-[#00C805]/5 transition-all group"
             >
-              <svg className="w-5 h-5 text-[#00C805] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
-              </svg>
+              <img src="/icon-robinhood-chain.png" alt="Robinhood Chain" className="w-5 h-5 object-contain shrink-0 rounded-full" />
               <div className="text-left">
                 <p className="text-xs font-bold text-slate-300 group-hover:text-[#00C805] transition-colors leading-none">Robinhood Chain</p>
                 <p className="text-[9px] font-mono text-slate-600 uppercase tracking-wider mt-0.5">Chain Infrastructure</p>
@@ -734,9 +753,7 @@ export default function LandingPage() {
               rel="noopener noreferrer"
               className="flex items-center gap-2.5 px-5 py-3 rounded-xl border border-slate-800 bg-slate-900/40 hover:border-violet-500/40 hover:bg-violet-500/5 transition-all group"
             >
-              <svg className="w-5 h-5 text-violet-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
-              </svg>
+              <img src="/icon-hackquest.png" alt="HackQuest" className="w-5 h-5 object-contain shrink-0" />
               <div className="text-left">
                 <p className="text-xs font-bold text-slate-300 group-hover:text-violet-400 transition-colors leading-none">HackQuest</p>
                 <p className="text-[9px] font-mono text-slate-600 uppercase tracking-wider mt-0.5">Arbitrum London 2026</p>

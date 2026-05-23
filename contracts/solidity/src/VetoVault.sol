@@ -21,7 +21,7 @@ import {IRiskEngine} from "./IRiskEngine.sol";
  *      computation. If variance > threshold → REVERT. Funds stay safe.
  */
 contract VetoVault {
-    // ─── Errors ───────────────────────────────────────────────
+        // ─── Errors ───────────────────────────────────────────────
     
     /// @notice Thrown when the Stylus risk engine determines asset is too volatile
     /// @param computedBps The computed variance in basis points
@@ -45,6 +45,14 @@ contract VetoVault {
 
     /// @notice Thrown when ETH transfer fails
     error TransferFailed();
+
+    /// @notice Thrown when the trade target is not whitelisted
+    /// @param target The target contract address
+    error TargetNotWhitelisted(address target);
+
+    /// @notice Thrown when the agent attempts to trade during a cooldown period
+    /// @param remainingTime Time remaining in seconds before the cooldown expires
+    error CooldownActive(uint256 remainingTime);
 
     // ─── Events ───────────────────────────────────────────────
 
@@ -78,6 +86,12 @@ contract VetoVault {
     /// @notice Emitted when the owner withdraws funds
     event Withdrawn(address indexed to, uint256 amount);
 
+    /// @notice Emitted when target whitelist status is updated
+    event TargetWhitelistUpdated(address indexed target, bool allowed);
+
+    /// @notice Emitted when the transaction cooldown period is updated
+    event CooldownPeriodUpdated(uint256 oldPeriod, uint256 newPeriod);
+
     // ─── State ────────────────────────────────────────────────
 
     /// @notice The vault owner (human who sets the rules)
@@ -97,6 +111,15 @@ contract VetoVault {
 
     /// @notice Total number of trades blocked by the risk engine
     uint256 public tradesBlocked;
+
+    /// @notice Whitelisted targets that the agent can interact with
+    mapping(address => bool) public isTargetWhitelisted;
+
+    /// @notice Minimum cooldown interval between trade execution attempts (in seconds)
+    uint256 public cooldownPeriod;
+
+    /// @notice Timestamp of the last trade attempt per agent
+    mapping(address => uint256) public lastTradeTimestamp;
 
     // ─── Modifiers ────────────────────────────────────────────
 
@@ -154,6 +177,27 @@ contract VetoVault {
     }
 
     /**
+     * @notice Toggle the whitelist status of a target address
+     * @param _target The target contract address
+     * @param _allowed True to allow, false to block
+     */
+    function setTargetWhitelist(address _target, bool _allowed) external onlyOwner {
+        if (_target == address(0)) revert InvalidTarget();
+        isTargetWhitelisted[_target] = _allowed;
+        emit TargetWhitelistUpdated(_target, _allowed);
+    }
+
+    /**
+     * @notice Set the transaction cooldown period in seconds
+     * @param _cooldownPeriod New cooldown period in seconds
+     */
+    function setCooldownPeriod(uint256 _cooldownPeriod) external onlyOwner {
+        uint256 old = cooldownPeriod;
+        cooldownPeriod = _cooldownPeriod;
+        emit CooldownPeriodUpdated(old, _cooldownPeriod);
+    }
+
+    /**
      * @notice Withdraw ETH from the vault (owner only)
      * @param to Destination address
      * @param amount Amount in wei
@@ -190,6 +234,18 @@ contract VetoVault {
         uint256[] calldata prices
     ) external onlyAgent returns (bytes memory) {
         if (target == address(0)) revert InvalidTarget();
+        
+        // ── POLICY CHECK: Whitelisted target ──
+        if (!isTargetWhitelisted[target]) revert TargetNotWhitelisted(target);
+
+        // ── POLICY CHECK: Cooldown interval ──
+        if (cooldownPeriod > 0) {
+            uint256 lastTrade = lastTradeTimestamp[msg.sender];
+            if (lastTrade > 0 && block.timestamp < lastTrade + cooldownPeriod) {
+                revert CooldownActive(lastTrade + cooldownPeriod - block.timestamp);
+            }
+        }
+
         if (prices.length < 2) revert InsufficientPriceData();
 
         // ── RISK CHECK: Call the Stylus WASM coprocessor ──
@@ -215,6 +271,7 @@ contract VetoVault {
         }
 
         // ── TRADE EXECUTION: Variance within threshold ──
+        lastTradeTimestamp[msg.sender] = block.timestamp;
         (bool success, bytes memory result) = target.call{value: value}(data);
         if (!success) revert TransferFailed();
 

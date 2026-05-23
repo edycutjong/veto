@@ -15,6 +15,7 @@ interface TradeAttempt {
   timestamp: string;
   prices: number[];
   txHash: string;
+  reason?: string;
 }
 
 interface VaultStats {
@@ -220,7 +221,13 @@ function TradeRow({
         <div className="mt-3 p-2 rounded-lg bg-red-500/5 border border-red-500/20">
           <p className="text-[11px] font-mono text-red-400 break-all">
             <span className="text-red-500 font-bold">Custom Error:</span>{" "}
-            VolatilityExceedsThreshold({trade.varianceBps}, {trade.thresholdBps})
+            {trade.reason === "TargetNotWhitelisted" ? (
+              `TargetNotWhitelisted(${trade.asset})`
+            ) : trade.reason?.startsWith("CooldownActive:") ? (
+              `CooldownActive(${trade.reason.split(":")[1]}s remaining)`
+            ) : (
+              `VolatilityExceedsThreshold(${trade.varianceBps}, ${trade.thresholdBps})`
+            )}
           </p>
         </div>
       )}
@@ -547,9 +554,9 @@ export default function Dashboard() {
               {trades.length === 0 ? (
                 <p className="text-sm text-slate-600 italic font-mono p-4">Waiting for agent trade proposals...</p>
               ) : (
-                trades.map((trade) => (
+                trades.map((trade, index) => (
                   <TradeRow
-                    key={trade.id}
+                    key={trade.txHash || `${trade.id}-${index}`}
                     trade={trade}
                     onShowAlert={(t) => {
                       setBlockedModalData(t);
