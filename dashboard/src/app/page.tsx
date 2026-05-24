@@ -502,12 +502,12 @@ export default function LandingPage() {
 
             {/* Left connector: step 1 right edge → step 2 left edge */}
             <div
-              className="hidden md:block absolute top-14 h-px bg-gradient-to-r from-amber-500/30 to-primary/40"
+              className="hidden md:block absolute top-14 h-px bg-linear-to-r from-amber-500/30 to-primary/40"
               style={{ left: "calc(16.667% + 3.5rem)", right: "calc(50% + 3.5rem)" }}
             />
             {/* Right connector: step 2 right edge → step 3 left edge */}
             <div
-              className="hidden md:block absolute top-14 h-px bg-gradient-to-r from-primary/40 to-primary/20"
+              className="hidden md:block absolute top-14 h-px bg-linear-to-r from-primary/40 to-primary/20"
               style={{ left: "calc(50% + 3.5rem)", right: "calc(16.667% + 3.5rem)" }}
             />
 
