@@ -112,6 +112,7 @@ body {
   mask-composite: exclude;
   opacity: 0.4;
   transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
 .border-gradient:hover::before {

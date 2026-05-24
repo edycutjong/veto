@@ -11,7 +11,7 @@ load_dotenv()
 
 # ─── Environment ───────────────────────────────────────────────
 
-RPC_URL = os.getenv("RPC_URL", "https://rpc.testnet.chain.robinhood.com")
+RPC_URL = os.getenv("RPC_URL", "https://sepolia-rollup.arbitrum.io/rpc")
 AGENT_PRIVATE_KEY = os.getenv("AGENT_PRIVATE_KEY", "")
 VAULT_ADDRESS = os.getenv("VETO_VAULT_ADDRESS", "")
 RISK_ENGINE_ADDRESS = os.getenv("RISK_ENGINE_ADDRESS", "")
@@ -116,7 +116,7 @@ VAULT_ABI = json.loads("""[
 
 # ─── Demo Price Sets ───────────────────────────────────────────
 
-# Stable BTC prices (±0.5%) — should PASS volatility check
+# Stable ETH prices (±0.5%) — should PASS volatility check
 DEMO_STABLE_PRICES_USD = [
     3241.57, 3238.22, 3245.10, 3240.88, 3236.75,
     3242.30, 3239.50, 3244.15, 3237.90, 3241.00,
