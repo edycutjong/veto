@@ -12,7 +12,7 @@ EVM layer of the Veto execution sandbox. Handles fund custody, access control, a
 
 ## Tests
 
-33 tests, all passing. Run with:
+39 tests, all passing. Run with:
 
 ```bash
 forge test -vvv
@@ -40,8 +40,8 @@ Set `RPC_URL` to the Robinhood Chain / Arbitrum Sepolia RPC endpoint. After depl
 
 | Contract | Address |
 |---|---|
-| RiskEngine (WASM) | `0x0a94398c550226ca01570afede89e378d81e9426` |
-| VetoVault | `0x77435CF556A3705496Aa3739bD3678D9edfcB69c` |
+| RiskEngine (WASM) | `0x2c0eebee49b38b2fe363664077003339e7b45d64` |
+| VetoVault | `0xba53711364C0fde5F6e8D450CFAd2655ADA70eD2` |
 
 ## Toolchain
 

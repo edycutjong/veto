@@ -101,7 +101,7 @@ help:
 	@echo "  make coverage     All coverage reports"
 	@echo ""
 	@echo "  Individual tests:"
-	@echo "  make test-solidity    forge test -vvv (33 tests)"
+	@echo "  make test-solidity    forge test -vvv (39 tests)"
 	@echo "  make test-stylus      cargo test --features stylus-test"
 	@echo "  make test-agent       pytest tests/"
 	@echo "  make test-dashboard   jest --ci"

@@ -776,7 +776,7 @@ export default function Dashboard() {
         </div>
 
         {/* Architecture Diagram */}
-        <div className="glass-card border-gradient p-6 mt-8 animate-fade-in-up delay-400">
+        <div className="glass-card border-gradient p-6 mt-16 animate-fade-in-up delay-400">
           <h2 className="text-sm font-semibold text-slate-400 mb-4 uppercase tracking-wider">Architecture</h2>
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 text-center">
             <div className="glass-card p-4 min-w-[160px]">

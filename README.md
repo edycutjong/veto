@@ -71,7 +71,7 @@ Autonomous AI trading agents are proliferating across DeFi. They optimize for re
 
 | Layer | Technology |
 |---|---|
-| **Vault** | Solidity (EVM) — fund custody, access control, 33 passing tests |
+| **Vault** | Solidity (EVM) — fund custody, access control, 39 passing tests |
 | **Risk Engine** | Rust/Stylus (WASM) — variance computation, `no_std`, U256 math |
 | **AI Agent** | Python + web3.py — market monitoring + trade execution |
 | **Dashboard** | Next.js 16 + Tailwind v4 — cyberpunk control panel |
@@ -111,7 +111,7 @@ Autonomous AI trading agents are proliferating across DeFi. They optimize for re
 git clone https://github.com/edycutjong/veto.git
 cd veto
 
-# 2. Run Solidity tests (33 tests)
+# 2. Run Solidity tests (39 tests)
 cd contracts/solidity && forge test -vvv && cd ../..
 
 # 3. Build Stylus WASM
@@ -135,7 +135,7 @@ npm run lint          # ESLint
 npm run typecheck     # TypeScript check
 npm run ci            # Full CI pipeline (lint + typecheck + test + build)
 
-# Solidity (33 tests)
+# Solidity (39 tests)
 cd contracts/solidity
 forge test -vvv
 
@@ -157,7 +157,7 @@ veto/
 │   │   │   ├── IRiskEngine.sol     # Interface for cross-contract Stylus call
 │   │   │   └── RiskEngineSol.sol   # Pure-Solidity variance (gas benchmark)
 │   │   └── test/
-│   │       └── VetoVault.t.sol     # Foundry tests (33 passing)
+│   │       └── VetoVault.t.sol     # Foundry tests (39 passing)
 │   └── stylus/                     # WASM math coprocessor (Rust)
 │       └── src/
 │           ├── lib.rs              # compute_variance() + check_volatility()
